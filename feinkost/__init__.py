@@ -11,4 +11,4 @@ Bootstrap(app)
 
 db = MongoEngine(app)
 
-from feinkost import views, models
+from feinkost import filters, views, models
