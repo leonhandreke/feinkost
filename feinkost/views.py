@@ -1,4 +1,5 @@
 import decimal
+from datetime import datetime, timedelta
 import re
 
 from flask import render_template, request, redirect, url_for
@@ -30,6 +31,12 @@ def inventoryitem_add():
         product = Product.objects.get(barcode=request.args.get('barcode'))
     except Product.DoesNotExist:
         return redirect(url_for('product_create', barcode=barcode, next=request.url))
+
+    InventoryItem(category=product.category,
+                  best_before=datetime.now() + timedelta(days=product.best_before_days),
+                  quantity = product.quantity).save()
+
+    return redirect(url_for('inventoryitem_list'))
 
 class ProductForm(RedirectForm):
     barcode = fields.TextField()
