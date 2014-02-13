@@ -3,3 +3,5 @@ MONGODB_SETTINGS = {
         'host': None,
         'port': None,
         }
+
+BOOTSTRAP_SERVE_LOCAL = True
