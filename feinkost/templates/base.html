@@ -1,0 +1,17 @@
+{% extends "bootstrap/base.html" %}
+{% block title %}Feinkost{% endblock %}
+
+{% block navbar %}
+<div class="navbar navbar-static-top navbar-inverse">
+	<div class="navbar-inner">
+		<a class="navbar-brand" href="/">Feinkost</a>
+		<ul class="nav navbar-nav">
+			<li><a href="/">Inventory</a></li>
+		</ul>
+	</div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container">{% block center %}{% endblock %}</div>
+{% endblock %}

@@ -1,4 +1,18 @@
-{% extends "bootstrap/base.html" %}
-{% block content %}
-¡Hola!
+{% extends "base.html" %}
+{% block center %}
+<h2>Inventory</h2>
+<table class="table">
+  <tr>
+    <th>Title</th>
+    <th>Quantity</th>
+    <th>Best Before</th>
+  </tr>
+  {% for item in inventory_items %}
+  <tr>
+    <td>{{ item.title }}</td>
+    <td>{{ (item.quantity, item.unit)|render_quantity }}</td>
+    <td>{{ item.best_before }}</td>
+  </tr>
+  {% endfor %}
+</table>
 {% endblock %}
