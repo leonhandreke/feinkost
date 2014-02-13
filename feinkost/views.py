@@ -9,6 +9,7 @@ from wtforms.validators import ValidationError
 from flask.ext.wtf import Form
 
 from feinkost import app
+from feinkost import codecheck
 from feinkost.forms import RedirectForm
 from feinkost.models import InventoryItem, Product, ProductCategory
 
@@ -80,4 +81,9 @@ def product_create():
 
         return form.redirect('inventoryitem_list')
     else:
+        codecheck_product = codecheck.get_product_data_by_barcode(form.barcode.data)
+        if codecheck_product:
+            form.name.data = codecheck_product['name']
+            form.trading_unit.data = codecheck_product['quantity'] + codecheck_product['unit']
+            form.category.data = codecheck_product['category']
         return render_template('product_create.html', form=form)
