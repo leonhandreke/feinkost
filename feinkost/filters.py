@@ -19,7 +19,7 @@ def render_quantity_filter(q):
     new_unit = unit
     if unit == 'l' and quantity < 1:
         new_unit = 'ml'
-    if unit == 'ml' and quantity > 1000:
+    if unit == 'ml' and quantity >= 1000:
         new_unit = 'l'
     if unit == 'kg' and quantity < 1:
         new_unit = 'g'
