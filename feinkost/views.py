@@ -30,7 +30,7 @@ def inventoryitem_add():
     try:
         product = Product.objects.get(barcode=request.args.get('barcode'))
     except Product.DoesNotExist:
-        return redirect(url_for('product_create', barcode=barcode, next=request.url))
+        return redirect(url_for('product_create', barcode=request.args.get('barcode'), next=request.url))
 
     InventoryItem(category=product.category,
                   best_before=datetime.now() + timedelta(days=product.best_before_days),
