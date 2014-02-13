@@ -1,3 +1,8 @@
 Flask
 flask-mongoengine
 flask-bootstrap
+beautifulsoup4
+
+# As of 2014-02-13 these are required to work with Python3
+git+https://github.com/mitsuhiko/werkzeug.git
+git+https://github.com/MongoEngine/flask-mongoengine.git
