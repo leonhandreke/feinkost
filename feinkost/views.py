@@ -45,7 +45,7 @@ class ProductForm(RedirectForm):
     category = fields.TextField()
     best_before_days = fields.IntegerField()
 
-    TRADING_UNIT_RE = '(\d+)(\W*)'
+    TRADING_UNIT_RE = '(\d+)(\w*)'
 
     def validate_quantity(self, field):
         trading_unit_re = re.search(self.TRADING_UNIT_RE, field.data)
