@@ -5,9 +5,10 @@ from flask import render_template, request, redirect, url_for
 
 from wtforms import fields
 from wtforms.validators import ValidationError
-from flask_wtf import Form
+from flask.ext.wtf import Form
 
 from feinkost import app
+from feinkost.forms import RedirectForm
 from feinkost.models import InventoryItem, Product, ProductCategory
 
 @app.route('/')
@@ -24,15 +25,14 @@ def inventoryitem_list():
     return render_template('inventoryitem_list.html', inventory_items=items)
 
 @app.route('/inventoryitem/add')
-@app.route('/inventoryitem/add/<barcode>')
-def inventoryitem_add(barcode=None):
+def inventoryitem_add():
     try:
-        product = Product.objects.get(barcode=barcode)
+        product = Product.objects.get(barcode=request.args.get('barcode'))
     except Product.DoesNotExist:
-        return redirect(url_for('product_create', barcode=barcode))
+        return redirect(url_for('product_create', barcode=barcode, next=request.url))
 
-
-class ProductForm(Form):
+class ProductForm(RedirectForm):
+    barcode = fields.TextField()
     name = fields.TextField()
     trading_unit = fields.TextField()
     category = fields.TextField()
@@ -59,18 +59,18 @@ class ProductForm(Form):
 
 
 #@app.route('/product/create')
-@app.route('/product/create/<barcode>', methods=['GET', 'POST'])
-def product_create(barcode=None):
-    form = ProductForm()
+@app.route('/product/create', methods=['GET', 'POST'])
+def product_create():
+    form = ProductForm(request.values)
     if request.method == 'POST' and form.validate():
         product = Product(name=form.name.data,
                           best_before_days=form.best_before_days.data,
                           quantity=form.get_quantity(),
-                          barcode=barcode)
+                          barcode=form.barcode.data)
         product.category, _ = ProductCategory.objects.get_or_create(name=form.category.data,
                                                                     unit=form.get_unit())
         product.save()
-        # TODO: Redirect back to the inventoryitem add form if needed.
-        return redirect('/')
+
+        return form.redirect('inventoryitem_list')
     else:
-        return render_template('product_create.html', form=form, barcode=barcode)
+        return render_template('product_create.html', form=form)
