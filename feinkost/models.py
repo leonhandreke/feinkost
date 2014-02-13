@@ -20,22 +20,18 @@ class ProductCategory(db.Document):
 
 
 class Product(db.Document):
-    barcode = db.StringField()
+    barcode = db.StringField(unique=True)
     name = db.StringField()
     # Quantity that is sold in the store
     quantity = db.DecimalField(required=True)
     best_before_days = db.IntField()
-    category = db.ReferenceField(ProductCategory, reverse_delete_rule=mongoengine.DENY)
-
-    def get_unit(self):
-        return self.category.get_unit()
-    unit = property(get_unit)
+    category = db.ReferenceField(ProductCategory, reverse_delete_rule=mongoengine.DENY, required=True)
 
 
 class InventoryItem(db.Document):
-    product = db.ReferenceField(Product, reverse_delete_rule=mongoengine.DENY, required=True)
+    category = db.ReferenceField(ProductCategory, reverse_delete_rule=mongoengine.DENY, required=True)
     best_before = db.DateTimeField()
     quantity = db.DecimalField(required=True)
 
     def get_unit(self):
-      return self.product.get_unit()
+      return self.category.get_unit()

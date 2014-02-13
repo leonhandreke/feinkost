@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block center %}
+<h2>Create Product</h2>
+<form method="POST" action="{{ url_for('product_create') }}">
+  {{ form.hidden_tag() }}
+  {{ form.barcode.label }} {{ form.barcode }}<br>
+  {{ form.name.label }} {{ form.name }}<br>
+  {{ form.best_before_days.label }} {{ form.best_before_days }}<br>
+  {{ form.trading_unit.label }} {{ form.trading_unit }}<br>
+  {{ form.category.label }} {{ form.category }}<br>
+  <input type="submit" value="Create">
+</form>
+{% endblock %}
