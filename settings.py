@@ -5,3 +5,5 @@ MONGODB_SETTINGS = {
         }
 
 BOOTSTRAP_SERVE_LOCAL = True
+
+WTF_CSRF_ENABLED = False
