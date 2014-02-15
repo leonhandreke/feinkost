@@ -37,14 +37,15 @@ def scan_barcode(redirect_to):
     """Redirec to a barcode scanning application.
 
     Args:
-        next: str, should have a {CODE} substring where the barcode should go.
+        next: str, should have a BARCODE_PLACEHOLDER substring where the barcode should go and be
+            externally-reachable.
     """
-    redirect('zxing://scan/?' + urllib.parse.urlencode([('ret', redirect_to)]))
+    return redirect('zxing://scan/?ret=' + redirect_to)
 
 @app.route('/inventoryitem/remove/by_barcode')
 def inventoryitem_remove_by_barcode():
     if 'barcode' not in request.args:
-        scan_barcode(redirect_to=url_for('inventoryitem_remove_by_barcode', barcode=BARCODE_PLACEHOLDER))
+        return scan_barcode(redirect_to=url_for('inventoryitem_remove_by_barcode', barcode=BARCODE_PLACEHOLDER, _external=True))
     else:
         try:
             product = Product.objects.get(barcode=request.args['barcode'])
