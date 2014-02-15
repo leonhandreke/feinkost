@@ -21,6 +21,10 @@ def inventoryitem_list():
 
 @app.route('/inventoryitem/add')
 def inventoryitem_add():
+    if 'barcode' not in request.args:
+        return scan_barcode(url_for('inventoryitem_add', barcode=BARCODE_PLACEHOLDER, _external=True))
+
+    # FIXME: GET modification is evil
     try:
         product = Product.objects.get(barcode=request.args.get('barcode'))
     except Product.DoesNotExist:
@@ -108,8 +112,8 @@ class ProductForm(RedirectForm):
 #@app.route('/product/create')
 @app.route('/product/create', methods=['GET', 'POST'])
 def product_create():
-    form = ProductForm(request.values)
-    if request.method == 'POST' and form.validate():
+    form = ProductForm()
+    if form.validate_on_submit():
         product = Product(name=form.name.data,
                           best_before_days=form.best_before_days.data,
                           quantity=form.get_quantity(),
@@ -120,6 +124,10 @@ def product_create():
 
         return form.redirect('inventoryitem_list')
     else:
+        if 'barcode' not in request.values:
+            return scan_barcode(redirect_to=url_for('product_create', barcode=BARCODE_PLACEHOLDER, next=request.args.get('next'), _external=True))
+
+        form.barcode.data = request.values['barcode']
         codecheck_product = codecheck.get_product_data_by_barcode(form.barcode.data)
         if codecheck_product:
             form.name.data = codecheck_product['name']
