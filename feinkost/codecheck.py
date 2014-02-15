@@ -5,7 +5,7 @@ import urllib.request
 from bs4 import BeautifulSoup
 
 def get_product_data_by_barcode(barcode):
-    search_url = 'http://codecheck.info/product.search?q=' + urllib.parse.quote(str(barcode))
+    search_url = 'http://www.codecheck.info/product.search?q=' + urllib.parse.quote(str(barcode))
     response = urllib.request.urlopen(search_url)
 
     # If nothing specific was found the website does not redirect
