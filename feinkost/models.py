@@ -20,12 +20,20 @@ class ProductCategory(db.Document):
 
 
 class Product(db.Document):
-    barcode = db.StringField(unique=True)
+    # Barcode of the product. Made unique by an index
+    barcode = db.StringField()
     name = db.StringField()
     # Quantity that is sold in the store
     quantity = db.DecimalField(required=True)
     best_before_days = db.IntField()
     category = db.ReferenceField(ProductCategory, reverse_delete_rule=mongoengine.DENY, required=True)
+
+    meta = {
+        'indexes': [
+            # Ensure barcodes may be empty, but if set, be unique
+            { 'fields': ['barcode'], 'sparse': True, 'unique': True }
+        ]
+    }
 
 
 class InventoryItem(db.Document):
