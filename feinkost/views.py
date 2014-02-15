@@ -1,8 +1,9 @@
 import decimal
 from datetime import datetime, timedelta
 import re
+import urllib.parse
 
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, abort
 
 from wtforms import fields
 from wtforms.validators import ValidationError
@@ -39,6 +40,51 @@ def inventoryitem_add():
                   quantity = product.quantity).save()
 
     return redirect(url_for('inventoryitem_list'))
+
+BARCODE_PLACEHOLDER = '{CODE}'
+def scan_barcode(redirect_to):
+    """Redirec to a barcode scanning application.
+
+    Args:
+        next: str, should have a {CODE} substring where the barcode should go.
+    """
+    redirect('zxing://scan/?' + urllib.parse.urlencode([('ret', redirect_to)]))
+
+@app.route('/inventoryitem/remove/by_barcode')
+def inventoryitem_remove_by_barcode():
+    if 'barcode' not in request.args:
+        scan_barcode(redirect_to=url_for('inventoryitem_remove_by_barcode', barcode=BARCODE_PLACEHOLDER))
+    else:
+        try:
+            product = Product.objects.get(barcode=request.args['barcode'])
+        except Product.DoesNotExist:
+            return abort(404)
+
+        items = InventoryItem.objects.filter(product=product.id).order_by('best_before')
+        if not items:
+            return abort(404)
+
+        return redirect(url_for('inventoryitem_remove', inventoryitem_id=items.first().id))
+
+@app.route('/inventoryitem/<inventoryitem_id>/remove', methods=['GET', 'POST'])
+def inventoryitem_remove(inventoryitem_id):
+    class InventoryItemRemoveForm(Form):
+        quantity = html5_fields.DecimalField()
+
+    inventoryitem = InventoryItem.objects.get(id=inventoryitem_id)
+
+    form = InventoryItemRemoveForm()
+    if form.validate_on_submit():
+        inventoryitem.quantity = inventoryitem.quantity - form.quantity.data
+        if inventoryitem.quantity <= 0:
+            inventoryitem.delete()
+        else:
+            inventoryitem.save()
+        return redirect(url_for('inventoryitem_list'))
+    else:
+        form.quantity.data = inventoryitem.quantity
+        return render_template('inventoryitem_remove.html', inventoryitem=inventoryitem, form=form)
+
 
 class ProductForm(RedirectForm):
     barcode = fields.TextField()

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
+{% block center %}
+<h2>Remove {{ inventoryitem.product.name }}</h2>
+<form method="POST" action="{{ url_for('inventoryitem_remove', inventoryitem_id=inventoryitem.id) }}" role="form" class="form-horizontal">
+  {{ form.hidden_tag() }}
+  {{ render_field(form.quantity) }}
+  <input type="submit" value="Remove" class="btn btn-primary pull-right">
+  <br><br>
+  <button type="button" class="btn btn-default col-sm-12">Remove All</button>
+</form>
+{% endblock %}
