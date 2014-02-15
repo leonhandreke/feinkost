@@ -19,7 +19,7 @@ def inventoryitem_list():
     items = []
     for item in InventoryItem.objects:
         items.append({
-            'title': item.category.name,
+            'title': item.product.category.name,
             'quantity': item.quantity,
             'unit': item.get_unit(),
             'best_before': item.best_before
@@ -34,7 +34,7 @@ def inventoryitem_add():
     except Product.DoesNotExist:
         return redirect(url_for('product_create', barcode=request.args.get('barcode'), next=request.url))
 
-    InventoryItem(category=product.category,
+    InventoryItem(product=product,
                   best_before=datetime.now() + timedelta(days=product.best_before_days),
                   quantity = product.quantity).save()
 

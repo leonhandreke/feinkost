@@ -35,11 +35,14 @@ class Product(db.Document):
         ]
     }
 
+    def get_unit(self):
+        return self.category.get_unit()
+
 
 class InventoryItem(db.Document):
-    category = db.ReferenceField(ProductCategory, reverse_delete_rule=mongoengine.DENY, required=True)
+    product = db.ReferenceField(Product, reverse_delete_rule=mongoengine.DENY, required=True)
     best_before = db.DateTimeField()
     quantity = db.DecimalField(required=True)
 
     def get_unit(self):
-      return self.category.get_unit()
+      return self.product.get_unit()
