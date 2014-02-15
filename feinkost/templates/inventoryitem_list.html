@@ -6,12 +6,16 @@
     <th>Title</th>
     <th>Quantity</th>
     <th>Best Before</th>
+    <th>Action</th>
   </tr>
   {% for item in inventory_items %}
   <tr>
-    <td>{{ item.title }}</td>
-    <td>{{ (item.quantity, item.unit)|render_quantity }}</td>
+    <td>{{ item.product.category.name }}</td>
+    <td>{{ (item.quantity, item.get_unit())|render_quantity }}</td>
     <td>{{ item.best_before }}</td>
+    <td><a href="{{ url_for('inventoryitem_remove', id=item.id) }}">
+        <button type="button" class="btn btn-danger">Remove</button>
+      </a></td>
   </tr>
   {% endfor %}
 </table>

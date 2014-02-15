@@ -17,16 +17,7 @@ from feinkost.models import InventoryItem, Product, ProductCategory
 
 @app.route('/')
 def inventoryitem_list():
-    items = []
-    for item in InventoryItem.objects:
-        items.append({
-            'title': item.product.category.name,
-            'quantity': item.quantity,
-            'unit': item.get_unit(),
-            'best_before': item.best_before
-            })
-
-    return render_template('inventoryitem_list.html', inventory_items=items)
+    return render_template('inventoryitem_list.html', inventory_items=InventoryItem.objects)
 
 @app.route('/inventoryitem/add')
 def inventoryitem_add():
@@ -64,14 +55,14 @@ def inventoryitem_remove_by_barcode():
         if not items:
             return abort(404)
 
-        return redirect(url_for('inventoryitem_remove', inventoryitem_id=items.first().id))
+        return redirect(url_for('inventoryitem_remove', id=items.first().id))
 
-@app.route('/inventoryitem/<inventoryitem_id>/remove', methods=['GET', 'POST'])
-def inventoryitem_remove(inventoryitem_id):
+@app.route('/inventoryitem/<id>/remove', methods=['GET', 'POST'])
+def inventoryitem_remove(id):
     class InventoryItemRemoveForm(Form):
         quantity = html5_fields.DecimalField()
 
-    inventoryitem = InventoryItem.objects.get(id=inventoryitem_id)
+    inventoryitem = InventoryItem.objects.get(id=id)
 
     form = InventoryItemRemoveForm()
     if form.validate_on_submit():
