@@ -7,6 +7,7 @@ from flask import render_template, request, redirect, url_for
 from wtforms import fields
 from wtforms.validators import ValidationError
 from flask.ext.wtf import Form
+from flask.ext.wtf import html5 as html5_fields
 
 from feinkost import app
 from feinkost import codecheck
@@ -44,7 +45,7 @@ class ProductForm(RedirectForm):
     name = fields.TextField()
     trading_unit = fields.TextField()
     category = fields.TextField()
-    best_before_days = fields.IntegerField()
+    best_before_days = html5_fields.IntegerField()
 
     TRADING_UNIT_RE = '(\d+)(\w*)'
 
