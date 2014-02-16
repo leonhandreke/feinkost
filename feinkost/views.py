@@ -90,7 +90,7 @@ class ProductForm(RedirectForm):
     category = fields.TextField()
     best_before_days = html5_fields.IntegerField()
 
-    TRADING_UNIT_RE = '(\d+)(\w*)'
+    TRADING_UNIT_RE = '(\d+\.\d*)(\w*)'
 
     def validate_quantity(self, field):
         trading_unit_re = re.search(self.TRADING_UNIT_RE, field.data)
@@ -107,7 +107,7 @@ class ProductForm(RedirectForm):
 
     def get_quantity(self):
         trading_unit_re = re.search(self.TRADING_UNIT_RE, self.trading_unit.data)
-        return int(trading_unit_re.group(1))
+        return decimal.Decimal(trading_unit_re.group(1))
 
 
 #@app.route('/product/create')
