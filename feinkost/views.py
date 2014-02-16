@@ -131,6 +131,6 @@ def product_create():
         codecheck_product = codecheck.get_product_data_by_barcode(form.barcode.data)
         if codecheck_product:
             form.name.data = codecheck_product['name']
-            form.trading_unit.data = codecheck_product['quantity'] + codecheck_product['unit']
+            form.trading_unit.data = str(codecheck_product['quantity']) + codecheck_product['unit']
             form.category.data = codecheck_product['category']
         return render_template('product_create.html', form=form)

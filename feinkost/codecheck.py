@@ -1,3 +1,4 @@
+from decimal import Decimal
 import re
 import urllib.parse
 import urllib.request
@@ -5,6 +6,18 @@ import urllib.request
 from bs4 import BeautifulSoup
 
 def get_product_data_by_barcode(barcode):
+    """Get product information for a barcode form the website codecheck.info
+
+    Args:
+        barcode: str, the barcode to search for.
+    Returns:
+        A dictionary with:
+            name, str
+            category, str
+            quantity, Decimal
+            unit: str
+    """
+
     search_url = 'http://www.codecheck.info/product.search?q=' + urllib.parse.quote(str(barcode))
     response = urllib.request.urlopen(search_url)
 
@@ -18,10 +31,20 @@ def get_product_data_by_barcode(barcode):
     product_name = breadcrumbs[-1].string
     product_category = breadcrumbs[-2].string
 
-    trading_unit_str = soup.find(text=re.compile("Menge")).parent.next_sibling.contents[0].string
-    trading_unit_re = re.search('(\d+)\s*(\w*)', trading_unit_str)
-    quantity = trading_unit_re.group(1)
+    trading_unit = soup.find(text=re.compile("Menge")).parent.next_sibling.contents[0].string
+    trading_unit = (trading_unit.replace(' ', '')
+                    # Remove Germany 1000-separators
+                    .replace('.', '')
+                    # Convert German decimal separators
+                    .replace(',', '.'))
+
+    trading_unit_re = re.search('(\d+\.*\d*)(\w*)', trading_unit)
+    quantity = Decimal(trading_unit_re.group(1))
+
     unit = trading_unit_re.group(2)
+    if unit == "Liter":
+        unit = 'l'
+    unit = unit.lower()
 
     return {
         'name': product_name,
