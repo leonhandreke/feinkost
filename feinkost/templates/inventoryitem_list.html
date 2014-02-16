@@ -1,4 +1,28 @@
 {% extends "base.html" %}
+
+{% macro render_bestbefore_date(bestbefore_date) %}
+{% set days = bestbefore_date|timedelta_days %}
+
+{% if days > 2 %}
+<span class="label label-success">
+{% elif days > 0 %}
+<span class="label label-warning">
+{% else %}
+<span class="label label-danger">
+{% endif %}
+
+  {% if abs(days) > 356 %}
+  {{ int(days / 365) }} year{% if int(abs(days / 365)) >= 2 %}s{% endif %}
+  {% elif abs(days) > 30 %}
+  {{ int(days // 30) }} month{% if int((days / 30)) >= 2 %}s{% endif %}
+  {% else %}
+  {{ days }} day{% if days >= 2 %}s{% endif %}
+  {% endif %}
+</span>
+
+{% endmacro %}
+
+
 {% block center %}
 <h2>Inventory</h2>
 <table class="table">
@@ -12,7 +36,7 @@
   <tr>
     <td>{{ item.product.category.name }}</td>
     <td>{{ (item.quantity, item.get_unit())|render_quantity }}</td>
-    <td>{{ item.best_before }}</td>
+    <td>{{ render_bestbefore_date(item.best_before) }}</td>
     <td><a href="{{ url_for('inventoryitem_remove', id=item.id) }}">
         <button type="button" class="btn btn-danger">Remove</button>
       </a></td>

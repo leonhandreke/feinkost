@@ -1,4 +1,5 @@
 import decimal
+from datetime import datetime
 
 from feinkost import app
 
@@ -32,3 +33,7 @@ def render_quantity_filter(q):
         new_quantity = quantity
 
     return str(new_quantity.quantize(decimal.Decimal('1.'), rounding=decimal.ROUND_DOWN)) + new_unit
+
+@app.template_filter('timedelta_days')
+def timedelta_days_filter(d):
+    return (d - datetime.now()).days

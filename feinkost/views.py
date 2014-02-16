@@ -17,7 +17,8 @@ from feinkost.models import InventoryItem, Product, ProductCategory
 
 @app.route('/')
 def inventoryitem_list():
-    return render_template('inventoryitem_list.html', inventory_items=InventoryItem.objects)
+    return render_template('inventoryitem_list.html', inventory_items=InventoryItem.objects,
+                           abs=abs, int=int)
 
 @app.route('/inventoryitem/add')
 def inventoryitem_add():
