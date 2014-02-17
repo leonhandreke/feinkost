@@ -1,6 +1,7 @@
 Flask
 flask-mongoengine
 flask-bootstrap
+Flask-Mobility
 beautifulsoup4
 
 # As of 2014-02-13 these are required to work with Python3
