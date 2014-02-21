@@ -135,3 +135,8 @@ def product_create():
             form.trading_unit.data = str(codecheck_product['quantity']) + codecheck_product['unit']
             form.category.data = codecheck_product['category']
         return render_template('product_create.html', form=form)
+
+@app.route('/product')
+def product_list():
+    # TODO: Order by category name (or even aggregate somehow?)
+    return render_template('product_list.html', products=Product.objects, abs=abs, int=int)
