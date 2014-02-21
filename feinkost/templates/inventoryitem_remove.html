@@ -5,8 +5,29 @@
 <form method="POST" action="{{ url_for('inventoryitem_remove', id=inventoryitem.id) }}" role="form" class="form-horizontal">
   {{ form.hidden_tag() }}
   {{ render_field(form.quantity) }}
-  <input type="submit" value="Remove" class="btn btn-primary pull-right">
-  <br><br>
-  <button type="button" class="btn btn-default col-sm-12">Remove All</button>
+  <div class="col-xs-12 col-md-3 pull-right form-group">
+    <input type="submit" value="Remove" class="btn btn-primary pull-right">
+  </div>
+  <div class="button-group pull-right">
+    <button type="button" class="btn btn-default" onClick="submitWithQuantity(1.0)">
+      Remove All
+    </button>
+    <button type="button" class="btn btn-default" onClick="submitWithQuantity(0.5)">
+      Remove Half
+    </button>
+    <button type="button" class="btn btn-default" onClick="submitWithQuantity(0.75)">
+      Remove 3/4
+    </button>
+  </div>
 </form>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script type="text/javascript">
+var submitWithQuantity = function(fraction) {
+  document.querySelector('form input[name=quantity]').value = fraction * {{ form.quantity.data }};
+  document.querySelector('form').submit()
+}
+</script>
 {% endblock %}
