@@ -125,15 +125,22 @@ def product_create():
 
         return form.redirect('inventoryitem_list')
     else:
-        if 'barcode' not in request.values:
+        if request.MOBILE and 'barcode' not in request.values:
             return scan_barcode(redirect_to=url_for('product_create', barcode=BARCODE_PLACEHOLDER, next=request.args.get('next'), _external=True))
 
-        form.barcode.data = request.values['barcode']
-        codecheck_product = codecheck.get_product_data_by_barcode(form.barcode.data)
-        if codecheck_product:
-            form.name.data = codecheck_product['name']
-            form.trading_unit.data = str(codecheck_product['quantity']) + codecheck_product['unit']
-            form.category.data = codecheck_product['category']
+        # Load barcode from request.values because the barcode scanner passes it as a GET variable
+        form.barcode.data = request.values.get('barcode')
+        if form.barcode.data:
+            try:
+                codecheck_product = codecheck.get_product_data_by_barcode(form.barcode.data)
+            except:
+                # TODO: More fine-grained exception handling, report errors with flash()
+                codecheck_product = None
+
+            if codecheck_product:
+                form.name.data = codecheck_product['name']
+                form.trading_unit.data = str(codecheck_product['quantity']) + codecheck_product['unit']
+                form.category.data = codecheck_product['category']
         return render_template('product_create.html', form=form)
 
 @app.route('/product')
