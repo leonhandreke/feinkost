@@ -4,10 +4,10 @@
 {% block navbar %}
 <div class="navbar navbar-static-top navbar-inverse">
 	<div class="navbar-inner">
-		<a class="navbar-brand" href="/">Feinkost</a>
+		<a class="navbar-brand" href="{{ url_for('inventoryitem_list') }}">Feinkost</a>
 		<ul class="nav navbar-nav">
-			<li><a href="/">Inventory</a></li>
-      <li><a href="{{ url_for('product_list') }}">Products</a></li>
+			<li><a href="{{ url_for('inventoryitem_list') }}">Inventory</a></li>
+			<li><a href="{{ url_for('product_list') }}">Products</a></li>
 		</ul>
 	</div>
 </div>
