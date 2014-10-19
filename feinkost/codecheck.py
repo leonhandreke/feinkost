@@ -17,7 +17,6 @@ def get_product_data_by_barcode(barcode):
             quantity, Decimal
             unit: str
     """
-
     search_url = 'http://www.codecheck.info/product.search?q=' + urllib.parse.quote(str(barcode))
     response = urllib.request.urlopen(search_url)
 
@@ -31,7 +30,7 @@ def get_product_data_by_barcode(barcode):
     product_name = breadcrumbs[-1].string
     product_category = breadcrumbs[-2].string
 
-    trading_unit = soup.find(text=re.compile("Menge")).parent.next_sibling.contents[0].string
+    trading_unit = soup.find(text=re.compile("Menge")).parent.next_sibling.next_sibling.string
     trading_unit = (trading_unit.replace(' ', '')
                     # Remove Germany 1000-separators
                     .replace('.', '')
