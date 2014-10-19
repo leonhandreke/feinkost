@@ -90,7 +90,7 @@ class ProductForm(RedirectForm):
     category = fields.TextField()
     best_before_days = html5_fields.IntegerField()
 
-    TRADING_UNIT_RE = '(\d+\.\d*)(\w*)'
+    TRADING_UNIT_RE = '(\d+\.?\d*)(\w*)'
 
     def validate_quantity(self, field):
         trading_unit_re = re.search(self.TRADING_UNIT_RE, field.data)
@@ -147,3 +147,12 @@ def product_create():
 def product_list():
     # TODO: Order by category name (or even aggregate somehow?)
     return render_template('product_list.html', products=Product.objects, abs=abs, int=int)
+
+@app.route('/product/<id>/edit')
+def product_edit(id):
+    try:
+        product = Product.objects.get(id=id)
+    except Product.DoesNotExist:
+        return abort(404)
+
+    return render_template('product_edit.html', products=Product.objects)
