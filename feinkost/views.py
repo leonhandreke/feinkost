@@ -95,7 +95,7 @@ class ProductForm(Form):
 
     def validate_trading_unit(self, field):
         unit = field.get_trading_unit()[1]
-        product_category = ProductCategory.objects.filter(id=self.category.data).first()
+        product_category = ProductCategory.objects.filter(name=self.category.data).first()
         if product_category and not product_category.get_unit() == unit:
             raise ValidationError("Unit does not match product category's unit.")
 
@@ -106,13 +106,14 @@ def product_create():
     if form.validate_on_submit():
         product = Product(name=form.name.data,
                           best_before_days=form.best_before_days.data,
-                          quantity=form.get_quantity(),
+                          quantity=form.trading_unit.get_trading_unit()[0],
                           barcode=form.barcode.data)
-        product.category, _ = ProductCategory.objects.get_or_create(name=form.category.data,
-                                                                    unit=form.get_unit())
+        product.category, _ = ProductCategory.objects.get_or_create(
+            name=form.category.data,
+            unit=form.trading_unit.get_trading_unit()[1])
         product.save()
 
-        return form.redirect('inventoryitem_list')
+        return redirect(url_for('inventoryitem_list'))
     else:
         if request.MOBILE and 'barcode' not in request.values:
             return scan_barcode(redirect_to=url_for('product_create', barcode=BARCODE_PLACEHOLDER, next=request.args.get('next'), _external=True))

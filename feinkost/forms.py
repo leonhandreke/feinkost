@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from flask import request, url_for, redirect
 from flask.ext.wtf import Form
-from wtforms import SelectField, HiddenField, TextField
+from wtforms import SelectField, HiddenField, TextField, StringField
 from wtforms.validators import StopValidation
 
 from feinkost.models import ProductCategory
@@ -37,24 +37,13 @@ class RedirectForm(Form):
         target = get_redirect_target()
         return redirect(target or url_for(endpoint, **values))
 
-class ProductCategoryField(SelectField):
-
-    def __init__(self, *args, **kwargs):
-        kwargs['choices'] = ProductCategory.objects.all().scalar('id', 'name')
-        super(ProductCategoryField, self).__init__(*args, **kwargs)
+class ProductCategoryField(StringField):
 
     def process_data(self, product_category):
-        self.data = self.coerce(getattr(product_category, 'id', None))
-
-    def pre_validate(self, form):
-        try:
-            ProductCategory.objects.get(id=self.data)
-        except ProductCategory.DoesNotExist as e:
-            raise StopValidation(e.args[0])
+        self.data = getattr(product_category, 'name', '')
 
     def populate_obj(self, obj, name):
-        setattr(obj, name, ProductCategory.objects.get(id=self.data))
-
+        setattr(obj, name, ProductCategory.objects.get(name=self.data))
 
 class QuantityUnitField(TextField):
 
