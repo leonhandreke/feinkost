@@ -94,7 +94,7 @@ class ProductForm(Form):
     TRADING_UNIT_RE = '(\d+\.?\d*)(\w*)'
 
     def validate_trading_unit(self, field):
-        unit = field.data[1]
+        unit = field.get_trading_unit()[1]
         product_category = ProductCategory.objects.filter(id=self.category.data).first()
         if product_category and not product_category.get_unit() == unit:
             raise ValidationError("Unit does not match product category's unit.")
@@ -150,7 +150,7 @@ def product_edit(id):
 
     if form.validate_on_submit():
         form.populate_obj(product)
-        product.quantity = form.trading_unit.data[0]
+        product.quantity = form.trading_unit.get_trading_unit()[0]
         product.save()
         return redirect(url_for('product_list'))
     else:

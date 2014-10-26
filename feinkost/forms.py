@@ -60,15 +60,19 @@ class QuantityUnitField(TextField):
 
     TRADING_UNIT_RE = '(\d+\.?\d*)([a-zA-Z]*)'
 
-    def process_formdata(self, valuelist):
-        match = re.search(self.TRADING_UNIT_RE, valuelist[0])
+    def pre_validate(self, form):
+        match = re.search(self.TRADING_UNIT_RE, self.data)
         if not match:
-            raise ValueError("Invalid quantity format.")
+            raise StopValidation("Invalid quantity format.")
 
-        quantity = Decimal(match.group(1))
         unit = match.group(2)
 
         if unit not in constants.UNITS:
-            raise ValueError("Invalid unit.")
+            raise StopValidation("Invalid unit.")
 
-        self.data = (quantity, unit)
+    def get_trading_unit(self):
+        match = re.search(self.TRADING_UNIT_RE, self.data)
+        quantity = Decimal(match.group(1))
+        unit = match.group(2)
+
+        return (quantity, unit)
