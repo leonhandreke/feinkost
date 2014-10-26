@@ -7,12 +7,13 @@ from flask import render_template, request, redirect, url_for, abort
 
 from wtforms import fields
 from wtforms.validators import ValidationError
+from flask.ext.mongoengine.wtf import model_form
 from flask.ext.wtf import Form
 from flask.ext.wtf import html5 as html5_fields
 
 from feinkost import app
 from feinkost import codecheck
-from feinkost.forms import RedirectForm
+from feinkost.forms import RedirectForm, ProductCategoryField, QuantityUnitField
 from feinkost.models import InventoryItem, Product, ProductCategory
 
 @app.route('/')
@@ -83,32 +84,20 @@ def inventoryitem_remove(id):
         return render_template('inventoryitem_remove.html', inventoryitem=inventoryitem, form=form)
 
 
-class ProductForm(RedirectForm):
+class ProductForm(Form):
     barcode = fields.TextField()
     name = fields.TextField()
-    trading_unit = fields.TextField()
-    category = fields.TextField()
+    trading_unit = QuantityUnitField()
+    category = ProductCategoryField()
     best_before_days = html5_fields.IntegerField()
 
     TRADING_UNIT_RE = '(\d+\.?\d*)(\w*)'
 
-    def validate_quantity(self, field):
-        trading_unit_re = re.search(self.TRADING_UNIT_RE, field.data)
-        if not trading_unit_re:
-            raise ValidationError("Invalid trading unit format.")
-
-        product_category = ProductCategory.objects.filter(name=self.category.data).first()
-        if product_category and not product_category.unit == self.get_unit():
+    def validate_trading_unit(self, field):
+        unit = field.data[1]
+        product_category = ProductCategory.objects.filter(id=self.category.data).first()
+        if product_category and not product_category.get_unit() == unit:
             raise ValidationError("Unit does not match product category's unit.")
-
-    def get_unit(self):
-        trading_unit_re = re.search(self.TRADING_UNIT_RE, self.trading_unit.data)
-        return trading_unit_re.group(2)
-
-    def get_quantity(self):
-        trading_unit_re = re.search(self.TRADING_UNIT_RE, self.trading_unit.data)
-        return decimal.Decimal(trading_unit_re.group(1))
-
 
 #@app.route('/product/create')
 @app.route('/product/create', methods=['GET', 'POST'])
@@ -141,18 +130,28 @@ def product_create():
                 form.name.data = codecheck_product['name']
                 form.trading_unit.data = str(codecheck_product['quantity']) + codecheck_product['unit']
                 form.category.data = codecheck_product['category']
-        return render_template('product_create.html', form=form)
+        return render_template('product_edit.html', form=form)
 
 @app.route('/product')
 def product_list():
     # TODO: Order by category name (or even aggregate somehow?)
     return render_template('product_list.html', products=Product.objects, abs=abs, int=int)
 
-@app.route('/product/<id>/edit')
+@app.route('/product/<id>/edit', methods=['GET', 'POST'])
 def product_edit(id):
     try:
         product = Product.objects.get(id=id)
     except Product.DoesNotExist:
         return abort(404)
 
-    return render_template('product_edit.html', products=Product.objects)
+    form = ProductForm(obj=product)
+    if request.method == 'GET':
+        form.trading_unit.data = str(product.quantity) + product.get_unit()
+
+    if form.validate_on_submit():
+        form.populate_obj(product)
+        product.quantity = form.trading_unit.data[0]
+        product.save()
+        return redirect(url_for('product_list'))
+    else:
+        return render_template('product_edit.html', product=product, form=form)

@@ -14,8 +14,8 @@ def render_quantity_filter(q):
     new_unit = unit
     if unit == UNIT_LITER and quantity < 1:
         new_unit = UNIT_MILLILITER
-    if unit == UNIT_GRAMM and quantity > 1000:
-        new_unit = UNIT_KILOGRAMM
+    if unit == UNIT_GRAM and quantity > 1000:
+        new_unit = UNIT_KILOGRAM
 
     if new_unit != unit:
         new_quantity = UNIT_CONVERSIONS.get((unit, new_unit))(quantity)

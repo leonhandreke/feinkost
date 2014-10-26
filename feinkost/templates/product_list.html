@@ -8,6 +8,7 @@
     <th>Title</th>
     <th>Trading Unit</th>
     <th>Best Before Duration</th>
+    <th>Action</th>
   </tr>
   {% for product in products %}
   <tr>
@@ -28,6 +29,11 @@
       {% else %}
         Inf
       {% endif %}
+    </td>
+    <td>
+      <a href="{{ url_for('product_edit', id=product.id) }}">
+        <button type="button" class="btn">Edit</button>
+      </a>
     </td>
   </tr>
   {% endfor %}

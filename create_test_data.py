@@ -7,7 +7,7 @@ for c in Product, InventoryItem, ProductCategory:
     c.drop_collection()
 
 milch = ProductCategory(name='Milch', unit=UNIT_LITER).save()
-mandeln = ProductCategory(name='Mandeln', unit=UNIT_GRAMM).save()
+mandeln = ProductCategory(name='Mandeln', unit=UNIT_GRAM).save()
 eisbergsalat = ProductCategory(name='Eisbergsalat').save()
 
 aldi_mandeln = Product(barcode='1', name='Sweet Valley Kalifornische Mandeln, ganz', quantity=200, category=mandeln, best_before_days=365).save()

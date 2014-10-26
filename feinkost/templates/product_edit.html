@@ -1,14 +1,25 @@
 {% extends "base.html" %}
 {% from "_formhelpers.html" import render_field %}
 {% block center %}
+
+{% if product %}
+<h2>Edit Product "{{ product.name }}"</h2>
+{% else %}
 <h2>Create Product</h2>
-<form method="POST" action="{{ url_for('product_create') }}" class="form-horizontal" role="form">
+{% endif %}
+
+<form method="POST" class="form-horizontal" role="form">
   {{ form.hidden_tag() }}
   {{ render_field(form.barcode) }}
   {{ render_field(form.name) }}
   {{ render_field(form.best_before_days) }}
   {{ render_field(form.trading_unit) }}
   {{ render_field(form.category) }}
+
+  {% if product %}
+  <input type="submit" value="Save" class="btn btn-primary pull-right">
+  {% else %}
   <input type="submit" value="Create" class="btn btn-primary pull-right">
+  {% endif %}
 </form>
 {% endblock %}

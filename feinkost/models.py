@@ -38,7 +38,6 @@ class Product(db.Document):
     def get_unit(self):
         return self.category.get_unit()
 
-
 class InventoryItem(db.Document):
     product = db.ReferenceField(Product, reverse_delete_rule=mongoengine.DENY, required=True)
     best_before = db.DateTimeField()
