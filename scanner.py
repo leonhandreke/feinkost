@@ -51,7 +51,12 @@ class InventoryItemAddAction():
 
 
 def process_barcode_add(v):
-    p = Product.objects.get(barcode=v)
+    try:
+        p = Product.objects.get(barcode=v)
+    except Product.DoesNotExist:
+        click.secho("Product with barcode %s does not exist!" % v, fg='red')
+        return True
+
     a = InventoryItemAddAction(p)
     a.execute()
     click.echo(a)
