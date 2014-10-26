@@ -44,7 +44,7 @@ class ProductCategoryField(SelectField):
         super(ProductCategoryField, self).__init__(*args, **kwargs)
 
     def process_data(self, product_category):
-        self.data = self.coerce(product_category.id)
+        self.data = self.coerce(getattr(product_category, 'id', None))
 
     def pre_validate(self, form):
         try:
