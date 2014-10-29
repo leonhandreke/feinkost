@@ -1,11 +1,15 @@
 import mongoengine
 
-from feinkost import app, db
+from feinkost import app, db, constants
 
 
 class ProductCategory(db.Document):
     name = db.StringField(required=True, unique=True)
-    unit = db.StringField()
+    unit = db.StringField(
+        choices=[
+            constants.UNIT_GRAM,
+            constants.UNIT_LITER,
+            constants.UNIT_NONE])
     category = db.ReferenceField('ProductCategory', reverse_delete_rule=mongoengine.DENY)
 
     def get_unit(self):
