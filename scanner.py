@@ -74,15 +74,12 @@ def add_new_product(barcode):
     unit = match.group(2)
 
     try:
-        conversion_path = [(unit, x) for x in constants.DATABASE_UNITS][0]
-    except IndexError:
+        unit, conversion = next(((k[1],v) for (k,v) in constants.UNIT_CONVERSIONS.items() if k[0] == unit))
+    except StopIteration:
         click.echo("No conversion to unit valid in database found")
         return
 
-    conversion = constants.UNIT_CONVERSIONS[conversion_path]
-
     quantity = conversion(quantity)
-    unit = conversion_path[1]
 
     try:
         category_name = click.prompt('Category')
