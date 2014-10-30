@@ -102,9 +102,11 @@ def add_new_product(barcode):
     except Abort:
         return
 
-    Product(barcode=barcode, name=name,
+    p = Product(barcode=barcode, name=name,
             quantity=quantity, best_before_days=best_before_days,
-            category=category).save()
+            category=category)
+    p.save()
+    return p
 
 
 def process_barcode_add(v):
@@ -112,9 +114,12 @@ def process_barcode_add(v):
         p = Product.objects.get(barcode=v)
     except Product.DoesNotExist:
         if click.confirm("Product with barcode %s does not exist! Create?" % v, default=True):
-            add_new_product(barcode=v)
+            p = add_new_product(barcode=v)
         else:
             return
+
+    if not p:
+        return
 
     a = InventoryItemAddAction(p)
     a.execute()
@@ -150,29 +155,26 @@ while True:
     except Abort:
         break
 
-    is_integer = True
-    try:
-        int(v)
-    except ValueError:
-        is_integer = False
+    if process_commands(v):
+        continue
 
     # Check if this is a barcode
-    if is_integer and len(v) >= 10:
+    if len(v) >= 8:
         if current_mode is MODE_ADD:
             if process_barcode_add(v):
                 continue
 
-    if is_integer and len(v) < 3:
+    try:
+        f = Decimal(v)
         a = previous_actions[-1]
         if not hasattr(a, 'multiply'):
             click.echo("Cannot multiply previous action")
             continue
-        a.multiply(int(v))
+        a.multiply(f)
         click.echo(a)
         continue
-
-    if process_commands(v):
-        continue
+    except InvalidOperation:
+        pass
 
     click.secho('Invalid input!', fg='red')
 
