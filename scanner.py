@@ -92,7 +92,7 @@ def add_new_product(barcode):
     try:
         category = ProductCategory.objects.get(name=category_name)
     except ProductCategory.DoesNotExist:
-        if click.confirm("Product category %s does not exist. Create?", default=True):
+        if click.confirm("Product category %s does not exist. Create?" % category_name, default=True):
             category = ProductCategory(name=category_name, unit=unit).save()
         else:
             return
