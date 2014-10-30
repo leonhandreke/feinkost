@@ -35,7 +35,7 @@
   {% for item in inventory_items %}
   <tr>
     <td>{{ item.product.category.name }}</td>
-    <td>{{ (item.quantity, item.get_unit())|render_quantity }}</td>
+    <td>{{ item|render_quantity }}</td>
     <td>{{ render_bestbefore_date(item.best_before) }}</td>
     <td><a href="{{ url_for('inventoryitem_remove', id=item.id) }}">
         <button type="button" class="btn btn-danger">Remove</button>

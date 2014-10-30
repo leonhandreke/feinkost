@@ -42,17 +42,18 @@ class InventoryItemAddAction():
         self.inventory_item = InventoryItem(
             product=self.product,
             best_before=datetime.now() + timedelta(days=self.product.best_before_days),
-            quantity=self.product.quantity).save()
+            quantity=1.0).save()
 
     def undo(self):
         self.inventory_item.delete()
 
     def multiply(self, times):
-        self.inventory_item.quantity = self.inventory_item.quantity * times
+        self.inventory_item.quantity = times
         self.inventory_item.save()
 
     def __str__(self):
-        return 'Add %s%s %s' % (self.inventory_item.quantity, self.product.get_unit(), self.product.name)
+        return 'Add %s %s %s%s' % (self.inventory_item.quantity, self.product.name,
+                                   self.product.quantity, self.product.get_unit())
 
 
 def add_new_product(barcode):

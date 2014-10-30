@@ -5,8 +5,9 @@ from feinkost.constants import *
 from feinkost import app
 
 @app.template_filter('render_quantity')
-def render_quantity_filter(q):
-    quantity, unit = q
+def render_quantity_filter(i):
+    quantity = i.quantity * i.product.quantity
+    unit = i.get_unit()
 
     if not unit:
         return str(quantity)

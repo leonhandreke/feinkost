@@ -34,7 +34,7 @@ def inventoryitem_add():
 
     InventoryItem(product=product,
                   best_before=datetime.now() + timedelta(days=product.best_before_days),
-                  quantity = product.quantity).save()
+                  quantity=decimal.Decimal("1.0")).save()
 
     return redirect(url_for('inventoryitem_list'))
 
