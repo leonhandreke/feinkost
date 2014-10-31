@@ -1,9 +1,8 @@
 from decimal import Decimal
 import re
-import urllib.parse
-import urllib.request
+import requests
 
-from bs4 import BeautifulSoup
+TRADING_UNIT_RE = '(\d+\.?\d*)(\w*)'
 
 def get_product_data_by_barcode(barcode):
     """Get product information for a barcode form the website codecheck.info
@@ -17,37 +16,35 @@ def get_product_data_by_barcode(barcode):
             quantity, Decimal
             unit: str
     """
-    search_url = 'http://www.codecheck.info/product.search?q=' + urllib.parse.quote(str(barcode))
-    response = urllib.request.urlopen(search_url)
+    url = 'http://www.codecheck.info/WebService/rest/prod/ean2/1/256/' + barcode
+    headers = {
+        'Authorization': 'DigestQuick nonce="DIG6QYxUqZWvCRdl9Wttjw==",mac="QmFo3kmlqxzdUpGP+n5OshvXm1rdqFWdWLqUZvCUup4="'
+    }
+    prod_id = requests.get(url, headers=headers).json()['result']['id']
 
-    # If nothing specific was found the website does not redirect
-    if response.geturl() == search_url:
-        return None
+    url = 'http://www.codecheck.info/WebService/rest/prod/id/5422089/' + str(prod_id)
 
-    soup = BeautifulSoup(response.read())
+    r = requests.get(url, headers=headers).json()['result']
 
-    breadcrumbs = soup.find(class_='breadcrumb').find_all('a')
-    product_name = breadcrumbs[-1].string
-    product_category = breadcrumbs[-2].string
+    name = r['name']
+    category = r['catName']
+    trading_unit = r['quant']
 
-    trading_unit = soup.find(text=re.compile("Menge")).parent.next_sibling.next_sibling.string
     trading_unit = (trading_unit.replace(' ', '')
                     # Remove Germany 1000-separators
                     .replace('.', '')
                     # Convert German decimal separators
-                    .replace(',', '.'))
+                    .replace(',', '.')
+                    .replace('Liter', 'l')
+                    .lower())
 
-    trading_unit_re = re.search('(\d+\.*\d*)(\w*)', trading_unit)
-    quantity = Decimal(trading_unit_re.group(1))
-
-    unit = trading_unit_re.group(2)
-    if unit == "Liter":
-        unit = 'l'
-    unit = unit.lower()
+    match = re.match(TRADING_UNIT_RE, trading_unit)
+    quantity = Decimal(match.group(1))
+    unit = match.group(2)
 
     return {
-        'name': product_name,
-        'category': product_category,
+        'name': name,
+        'category': category,
         'quantity': quantity,
         'unit': unit
     }
