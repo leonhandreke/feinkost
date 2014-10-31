@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% macro render_bestbefore_date(bestbefore_date) %}
+{% if bestbefore_date %}
 {% set days = bestbefore_date|timedelta_days %}
 
 {% if days > 2 %}
@@ -19,7 +20,11 @@
   {{ days }} day{% if days >= 2 %}s{% endif %}
   {% endif %}
 </span>
-
+{% else %}
+<span class="label label-success">
+  ∞
+</span>
+{% endif %}
 {% endmacro %}
 
 
