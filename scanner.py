@@ -1,12 +1,13 @@
 import re
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
+import readline
 
 import click
 from click.exceptions import Abort
 
 from feinkost.models import Product, InventoryItem, ProductCategory
-from feinkost import constants
+from feinkost import constants, codecheck
 
 click.echo('Welcome to Feinkost!')
 
@@ -39,9 +40,13 @@ class InventoryItemAddAction():
         self.product = product
 
     def execute(self):
+        if self.product.best_before_days:
+            best_before = datetime.now() + timedelta(days=self.product.best_before_days),
+        else:
+            best_before = None
         self.inventory_item = InventoryItem(
             product=self.product,
-            best_before=datetime.now() + timedelta(days=self.product.best_before_days),
+            best_before=best_before,
             quantity=1.0).save()
 
     def undo(self):
@@ -56,10 +61,27 @@ class InventoryItemAddAction():
                                    self.product.quantity, self.product.get_unit())
 
 
+def input_default(text, startup_text=''):
+    readline.set_startup_hook(lambda: readline.insert_text(startup_text))
+    r = input(text + ': ')
+    readline.set_startup_hook(None)
+    return r
+
 def add_new_product(barcode):
     try:
-        name = click.prompt('Name')
-        trading_unit = click.prompt('Trading Unit')
+        codecheck_info = codecheck.get_product_data_by_barcode(barcode)
+    except Exception as e:
+        click.echo("Failed to get product information from codecheck.info")
+        codecheck_info = {
+            'name': '',
+            'category_name': '',
+            'unit': '',
+            'quantity': ''
+        }
+
+    try:
+        name = input_default('Name', codecheck_info['name'])
+        trading_unit = input_default('Trading Unit', str(codecheck_info['quantity']) + codecheck_info['unit'])
     except Abort:
         return
 
@@ -82,7 +104,7 @@ def add_new_product(barcode):
     quantity = conversion(quantity)
 
     try:
-        category_name = click.prompt('Category')
+        category_name = input_default('Category', codecheck_info['category'])
     except Abort:
         return
 
@@ -95,9 +117,12 @@ def add_new_product(barcode):
             return
 
     try:
-        best_before_days = click.prompt('Best Before Days', type=int)
+        best_before_days = input_default('Best Before Days')
     except Abort:
         return
+
+    if not best_before_days:
+        best_before_days = None
 
     p = Product(barcode=barcode, name=name,
             quantity=quantity, best_before_days=best_before_days,
