@@ -30,13 +30,15 @@
 
 {% block center %}
 <h2>Inventory</h2>
-<table class="table">
-  <tr>
-    <th>Title</th>
-    <th>Quantity</th>
-    <th>Best Before</th>
-    <th>Action</th>
-  </tr>
+<table id="inventory-items-table" class="table">
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Quantity</th>
+      <th>Best Before</th>
+      <th>Action</th>
+    </tr>
+  </thead>
   {% for item in inventory_items %}
   <tr>
     <td>{{ item.product.category.name }}</td>
@@ -48,6 +50,31 @@
   </tr>
   {% endfor %}
 </table>
+
+{% block scripts %}
+{{super()}}
+<script>
+    $(document).ready(function () {
+        $('#inventory-items-table').bootstrapTable({
+          search: true,
+          columns: [{
+            field: 'name',
+            title: 'Name',
+            sortable: true,
+          }, {
+            field: 'quantity',
+            title: 'Quantity',
+          }, {
+            field: 'best_before',
+            title: 'Best Before',
+            sortable: true,
+          }, {
+            field: 'action',
+          }]
+        })
+    });
+</script>
+{% endblock %}
 
 <div class="form">
   <div class="col-xs-12 col-md-3 pull-right form-group">
