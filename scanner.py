@@ -52,7 +52,7 @@ class InventoryItemAddAction():
     def undo(self):
         self.inventory_item.delete()
 
-    def multiply(self, times):
+    def set_quantity(self, times):
         self.inventory_item.quantity = times
         self.inventory_item.save()
 
@@ -189,10 +189,10 @@ while True:
     try:
         f = Decimal(v)
         a = previous_actions[-1]
-        if not hasattr(a, 'multiply'):
-            click.echo("Cannot multiply previous action")
+        if not hasattr(a, 'set_quantity'):
+            click.echo("Cannot set quantity of previous action")
             continue
-        a.multiply(f)
+        a.set_quantity(f)
         click.echo(a)
         continue
     except InvalidOperation:
