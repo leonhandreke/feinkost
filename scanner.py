@@ -222,7 +222,26 @@ def process_barcode_inventory_item_modify(v):
     click.echo(a)
     return True
 
+def set_previous_item_quantity(qty):
+    try:
+        a = previous_actions[-1]
+    except IndexError:
+        click.secho("No previous item to set the quantity of!", fg='red')
+        return
+
+    if not hasattr(a, 'set_quantity'):
+        click.secho("Cannot set quantity on previous action!", fg='red')
+        return
+
+    a.set_quantity(Decimal(qty))
+    click.echo(a)
+    return
+
 def process_commands(v):
+    if v =='02000053':
+        set_previous_item_quantity(0.5)
+        return True
+
     if v == 'MADD':
         a = ModeSwitchAction(MODE_ADD)
         a.execute()
