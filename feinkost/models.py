@@ -43,9 +43,33 @@ class Product(db.Document):
         return self.category.get_unit()
 
 class InventoryItem(db.Document):
-    product = db.ReferenceField(Product, reverse_delete_rule=mongoengine.DENY, required=True)
+    # For direct updating of inventory items, such as refillable containers
+    barcode = db.StringField()
+
+    # For refillable containers
+    capacity = db.DecimalField()
+    category = db.ReferenceField('ProductCategory', reverse_delete_rule=mongoengine.DENY)
+
+    product = db.ReferenceField('Product', reverse_delete_rule=mongoengine.DENY)
     best_before = db.DateTimeField()
+    # Stored as a fraction of the quantity of the product or the capacity of the container
     quantity = db.DecimalField(required=True)
 
+    meta = {
+        'indexes': [
+            # Ensure barcodes may be empty, but if set, be unique
+            { 'fields': ['barcode'], 'sparse': True, 'unique': True }
+        ]
+    }
+
+    def get_display_name(self):
+        if self.product:
+            return self.product.name
+        else:
+            return self.category.name
+
     def get_unit(self):
-      return self.product.get_unit()
+        if self.product:
+            return self.product.get_unit()
+        else:
+            return self.category.get_unit()

@@ -61,28 +61,34 @@ class InventoryItemAddAction():
                                    self.product.quantity, self.product.get_unit())
 
 
+class InventoryItemModifyAction():
+    def __init__(self, inventory_item):
+        self.inventory_item = inventory_item
+
+    def execute(self):
+        pass
+
+    def set_quantity(self, times):
+        self.inventory_item.quantity = times
+        self.inventory_item.save()
+
+    def __str__(self):
+        return 'Modify %s %s x %s%s' % (self.inventory_item.get_display_name(),
+                                        self.inventory_item.quantity,
+                                        self.inventory_item.capacity,
+                                        self.inventory_item.get_unit())
+
+
 def input_default(text, startup_text=''):
     readline.set_startup_hook(lambda: readline.insert_text(startup_text))
     r = input(text + ': ')
     readline.set_startup_hook(None)
     return r
 
-def add_new_product(barcode):
+def input_trading_unit(default_text=''):
     try:
-        codecheck_info = codecheck.get_product_data_by_barcode(barcode)
-    except Exception as e:
-        click.echo("Failed to get product information from codecheck.info")
-        codecheck_info = {
-            'name': '',
-            'category_name': '',
-            'unit': '',
-            'quantity': ''
-        }
-
-    try:
-        name = input_default('Name', codecheck_info['name'])
-        trading_unit = input_default('Trading Unit', str(codecheck_info['quantity']) + codecheck_info['unit'])
-    except Abort:
+        trading_unit = input_default('Trading Unit', default_text)
+    except EOFError:
         return
 
     match = re.match(TRADING_UNIT_RE, trading_unit)
@@ -95,6 +101,9 @@ def add_new_product(barcode):
 
     unit = match.group(2)
 
+    return (quantity, unit)
+
+def convert_to_database_unit(quantity, unit):
     try:
         unit, conversion = next(((k[1],v) for (k,v) in constants.UNIT_CONVERSIONS.items() if k[0] == unit))
     except StopIteration:
@@ -102,23 +111,35 @@ def add_new_product(barcode):
         return
 
     quantity = conversion(quantity)
+    return quantity, unit
+
+def add_new_product(barcode):
+    try:
+        codecheck_info = codecheck.get_product_data_by_barcode(barcode)
+    except Exception as e:
+        click.echo("Failed to get product information from codecheck.info")
+        codecheck_info = {
+            'name': '',
+            'category': '',
+            'unit': '',
+            'quantity': ''
+        }
 
     try:
-        category_name = input_default('Category', codecheck_info['category'])
-    except Abort:
+        name = input_default('Name', codecheck_info['name'])
+        quantity, unit = input_trading_unit(str(codecheck_info['quantity']) + codecheck_info['unit'])
+    except EOFError:
+        return
+
+    quantity, unit = convert_to_database_unit(quantity, unit)
+
+    category = input_category(unit, codecheck_info['category'])
+    if not category:
         return
 
     try:
-        category = ProductCategory.objects.get(name=category_name)
-    except ProductCategory.DoesNotExist:
-        if click.confirm("Product category %s does not exist. Create?" % category_name, default=True):
-            category = ProductCategory(name=category_name, unit=unit).save()
-        else:
-            return
-
-    try:
         best_before_days = input_default('Best Before Days')
-    except Abort:
+    except EOFError:
         return
 
     if not best_before_days:
@@ -129,6 +150,45 @@ def add_new_product(barcode):
             category=category)
     p.save()
     return p
+
+def input_category(unit, default_text=''):
+    try:
+        category_name = input_default('Category', default_text)
+    except EOFError:
+        return
+
+    try:
+        return ProductCategory.objects.get(name=category_name)
+    except ProductCategory.DoesNotExist:
+        if click.confirm("Product category %s does not exist. Create?" % category_name, default=True):
+            return ProductCategory(name=category_name, unit=unit).save()
+        else:
+            return
+
+def add_new_refillable_container(barcode):
+    if not barcode.startswith('02'):
+        return False
+
+    click.echo("Add new refillable container.")
+    capacity, unit = input_trading_unit()
+    capacity, unit = convert_to_database_unit(capacity, unit)
+
+    category = input_category(unit)
+
+    if unit != category.get_unit():
+        click.echo("Capacity unit does not match category unit!")
+        return True
+
+    i = InventoryItem(barcode=barcode,
+                      capacity=capacity,
+                      category=category,
+                      quantity=1.0)
+    i.save()
+    # Allow modification right afterwards
+    a = InventoryItemModifyAction(i)
+    previous_actions.append(a)
+    click.echo(a)
+    return i
 
 
 def process_barcode_add(v):
@@ -147,6 +207,19 @@ def process_barcode_add(v):
     a.execute()
     click.echo(a)
     previous_actions.append(a)
+    return True
+
+
+def process_barcode_inventory_item_modify(v):
+    """Process barcodes attached to refillable containers."""
+    try:
+        i = InventoryItem.objects.get(barcode=v)
+    except InventoryItem.DoesNotExist:
+        return
+
+    a = InventoryItemModifyAction(i)
+    previous_actions.append(a)
+    click.echo(a)
     return True
 
 def process_commands(v):
@@ -180,11 +253,15 @@ while True:
     if process_commands(v):
         continue
 
-    # Check if this is a barcode
-    if len(v) >= 8:
-        if current_mode is MODE_ADD:
-            if process_barcode_add(v):
-                continue
+    if process_barcode_inventory_item_modify(v):
+        continue
+
+    if add_new_refillable_container(v):
+        continue
+
+    if MODE_ADD:
+        if process_barcode_add(v):
+            continue
 
     try:
         f = Decimal(v)
