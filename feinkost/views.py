@@ -150,7 +150,7 @@ def product_edit(id):
         return abort(404)
 
     form = ProductForm(obj=product)
-    if request.method == 'GET':
+    if form.trading_unit.data is None:
         form.trading_unit.data = str(product.quantity) + product.get_unit()
 
     if form.validate_on_submit():
