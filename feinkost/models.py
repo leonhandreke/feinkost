@@ -6,10 +6,7 @@ from feinkost import app, db, constants
 class ProductCategory(db.Document):
     name = db.StringField(required=True, unique=True)
     unit = db.StringField(
-        choices=[
-            constants.UNIT_GRAM,
-            constants.UNIT_LITER,
-            constants.UNIT_NONE])
+        choices=constants.DATABASE_UNITS)
     category = db.ReferenceField('ProductCategory', reverse_delete_rule=mongoengine.DENY)
 
     def get_unit(self):
@@ -76,3 +73,6 @@ class InventoryItem(db.Document):
             return self.product.get_unit()
         else:
             return self.category.get_unit()
+
+    def is_refillable_container(self):
+        return self.capacity is not None

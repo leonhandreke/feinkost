@@ -43,9 +43,11 @@
     <td>
       {% for item in items %}
       <div class="btn-group" style="margin: 3px;">
-        <button type="button" class="btn btn-sm btn-default" style="width: 70px;">
+        <a class="btn btn-sm btn-default"
+          href="{{ url_for('inventoryitem_remove', id=item.id) }}"
+          style="width: 70px;">
           {{ item|render_inventory_item_quantity }}
-        </button>
+        </a>
 
         {% if item.product %}
         <a href="{{ url_for('product_edit', id=item.product.id) }}"
@@ -55,13 +57,17 @@
         {% endif %}
 
         {% if item.category %}
-        <a href=""
-          class="btn btn-sm btn-default">
-          {{ item.category.name }}
-        </a>
+          <button type="button" class="btn btn-sm btn-default">
+            {{ item.category.name }}
+          </button>
         {% endif %}
 
+        {% if item.is_refillable_container() %}
+        <button class="btn btn-info btn-sm">Refillable</button>
+        {% else %}
         {{ render_bestbefore_date(item.best_before) }}
+        {% endif %}
+
         <a class="btn btn-sm btn-default" href="{{ url_for('inventoryitem_remove', id=item.id) }}">
           <span class="glyphicon glyphicon-remove"></span>
         </a>
