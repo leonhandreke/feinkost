@@ -44,13 +44,25 @@
       {% for item in items %}
       <div class="btn-group" style="margin: 3px;">
         <button type="button" class="btn btn-sm btn-default" style="width: 70px;">{{ item|render_quantity }}</button>
-        <button type="button" class="btn btn-sm btn-default" style="">{{ item.product.name }}</button>
+
+        {% if item.product %}
+        <a href="{{ url_for('product_edit', id=item.product.id) }}"
+          class="btn btn-sm btn-default">
+          {{ item.product.name }}
+        </a>
+        {% endif %}
+
+        {% if item.category %}
+        <a href=""
+          class="btn btn-sm btn-default">
+          {{ item.category.name }}
+        </a>
+        {% endif %}
+
         {{ render_bestbefore_date(item.best_before) }}
-        <button type="button" class="btn btn-sm btn-default">
-          <a href="{{ url_for('inventoryitem_remove', id=item.id) }}">
-            <span class="glyphicon glyphicon-remove"></span>
-          </a>
-        </button>
+        <a class="btn btn-sm btn-default" href="{{ url_for('inventoryitem_remove', id=item.id) }}">
+          <span class="glyphicon glyphicon-remove"></span>
+        </a>
       </div>
       </br>
       {% endfor %}
