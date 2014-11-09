@@ -154,6 +154,10 @@ def product_edit(id):
         form.trading_unit.data = str(product.quantity) + product.get_unit()
 
     if form.validate_on_submit():
+        # Create category if it does not exist
+        ProductCategory.objects.get_or_create(
+            name=form.category.data, unit=form.trading_unit.get_trading_unit()[1])
+
         form.populate_obj(product)
         product.quantity = form.trading_unit.get_trading_unit()[0]
         product.save()
