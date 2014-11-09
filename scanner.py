@@ -105,7 +105,8 @@ def input_trading_unit(default_text=''):
 
 def convert_to_database_unit(quantity, unit):
     try:
-        unit, conversion = next(((k[1],v) for (k,v) in constants.UNIT_CONVERSIONS.items() if k[0] == unit))
+        unit, conversion = next(((k[1],v) for (k,v) in constants.UNIT_CONVERSIONS.items()
+                                 if k[0] == unit and k[1] in constants.DATABASE_UNITS))
     except StopIteration:
         click.echo("No conversion to unit valid in database found")
         return
@@ -175,8 +176,8 @@ def add_new_refillable_container(barcode):
 
     category = input_category(unit)
 
-    if unit != category.get_unit():
-        click.echo("Capacity unit does not match category unit!")
+    if (category.get_unit(), unit) not in constants.UNIT_CONVERSIONS.keys():
+        click.echo("Capacity unit is not convertible to category unit!")
         return True
 
     i = InventoryItem(barcode=barcode,
