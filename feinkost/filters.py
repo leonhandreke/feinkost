@@ -14,7 +14,7 @@ def render_inventoryitem_quantity(inventory_item):
     return render_quantity(quantity, inventory_item.get_unit())
 
 @app.template_filter('render_product_quantity')
-def render_inventoryitem_quantity(product):
+def render_product_quantity(product):
     return render_quantity(product.quantity, product.get_unit())
 
 def render_quantity(quantity, unit):
