@@ -5,11 +5,11 @@
 {% set days = bestbefore_date|timedelta_days %}
 
 {% if days > 2 %}
-<span class="label label-success">
+<span class="btn btn-success btn-sm">
 {% elif days > 0 %}
-<span class="label label-warning">
+<span class="btn btn-warning btn-sm">
 {% else %}
-<span class="label label-danger">
+<span class="btn btn-danger btn-sm">
 {% endif %}
 
   {% if abs(days) > 300 %}
@@ -21,9 +21,9 @@
   {% endif %}
 </span>
 {% else %}
-<span class="label label-success">
+<button class="btn btn-success btn-sm">
   ∞
-</span>
+</button>
 {% endif %}
 {% endmacro %}
 
@@ -34,19 +34,27 @@
   <thead>
     <tr>
       <th>Title</th>
-      <th>Quantity</th>
-      <th>Best Before</th>
-      <th>Action</th>
+      <th></th>
     </tr>
   </thead>
-  {% for item in inventory_items %}
+  {% for category, items in inventory_items.items() %}
   <tr>
-    <td>{{ item.product.category.name }}</td>
-    <td>{{ item|render_quantity }}</td>
-    <td>{{ render_bestbefore_date(item.best_before) }}</td>
-    <td><a href="{{ url_for('inventoryitem_remove', id=item.id) }}">
-        <button type="button" class="btn btn-danger">Remove</button>
-      </a></td>
+    <td>{{ category.name }}</td>
+    <td>
+      {% for item in items %}
+      <div class="btn-group" style="margin: 3px;">
+        <button type="button" class="btn btn-sm btn-default" style="width: 70px;">{{ item|render_quantity }}</button>
+        <button type="button" class="btn btn-sm btn-default" style="">{{ item.product.name }}</button>
+        {{ render_bestbefore_date(item.best_before) }}
+        <button type="button" class="btn btn-sm btn-default">
+          <a href="{{ url_for('inventoryitem_remove', id=item.id) }}">
+            <span class="glyphicon glyphicon-remove"></span>
+          </a>
+        </button>
+      </div>
+      </br>
+      {% endfor %}
+    </td>
   </tr>
   {% endfor %}
 </table>
@@ -61,15 +69,6 @@
             field: 'name',
             title: 'Name',
             sortable: true,
-          }, {
-            field: 'quantity',
-            title: 'Quantity',
-          }, {
-            field: 'best_before',
-            title: 'Best Before',
-            sortable: true,
-          }, {
-            field: 'action',
           }]
         })
     });

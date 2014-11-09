@@ -6,7 +6,10 @@ from feinkost import app
 
 @app.template_filter('render_quantity')
 def render_quantity_filter(i):
-    quantity = i.quantity * i.product.quantity
+    if i.capacity is not None:
+        quantity = i.quantity * i.capacity
+    else:
+        quantity = i.quantity * i.product.quantity
     unit = i.get_unit()
 
     if not unit:

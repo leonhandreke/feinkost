@@ -2,6 +2,7 @@ import decimal
 from datetime import datetime, timedelta
 import re
 import urllib.parse
+from collections import defaultdict
 
 from flask import render_template, request, redirect, url_for, abort
 
@@ -18,7 +19,10 @@ from feinkost.models import InventoryItem, Product, ProductCategory
 
 @app.route('/')
 def inventoryitem_list():
-    return render_template('inventoryitem_list.html', inventory_items=InventoryItem.objects,
+    items_by_category = defaultdict(list)
+    for inventory_item in InventoryItem.objects.all():
+        items_by_category[inventory_item.get_category()].append(inventory_item)
+    return render_template('inventoryitem_list.html', inventory_items=items_by_category,
                            abs=abs, int=int)
 
 @app.route('/inventoryitem/add')

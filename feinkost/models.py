@@ -68,6 +68,9 @@ class InventoryItem(db.Document):
         else:
             return self.category.name
 
+    def get_category(self):
+        return getattr(self, 'category', None) or self.product.category
+
     def get_unit(self):
         if self.product:
             return self.product.get_unit()
