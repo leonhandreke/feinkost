@@ -41,7 +41,7 @@ class InventoryItemAddAction():
 
     def execute(self):
         if self.product.best_before_days:
-            best_before = datetime.now() + timedelta(days=self.product.best_before_days),
+            best_before = datetime.now() + timedelta(days=self.product.best_before_days)
         else:
             best_before = None
         self.inventory_item = InventoryItem(
@@ -193,6 +193,9 @@ def add_new_refillable_container(barcode):
 
 
 def process_barcode_add(v):
+    if len(v) < 8:
+        return
+
     try:
         p = Product.objects.get(barcode=v)
     except Product.DoesNotExist:
