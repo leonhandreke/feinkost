@@ -49,17 +49,15 @@
           {{ item|render_inventory_item_quantity }}
         </a>
 
-        {% if item.product %}
+        {% if item.is_refillable_container() %}
+        <button type="button" class="btn btn-sm btn-default">
+          {{ item.category.name }}
+        </button>
+        {% else %}
         <a href="{{ url_for('product_edit', id=item.product.id) }}"
           class="btn btn-sm btn-default">
           {{ item.product.name }}
         </a>
-        {% endif %}
-
-        {% if item.category %}
-          <button type="button" class="btn btn-sm btn-default">
-            {{ item.category.name }}
-          </button>
         {% endif %}
 
         {% if item.is_refillable_container() %}
