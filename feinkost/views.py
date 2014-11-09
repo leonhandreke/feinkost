@@ -6,7 +6,7 @@ from collections import defaultdict
 
 from flask import render_template, request, redirect, url_for, abort
 
-from wtforms import fields
+from wtforms import fields, validators
 from wtforms.validators import ValidationError
 from flask.ext.mongoengine.wtf import model_form
 from flask.ext.wtf import Form
@@ -93,7 +93,7 @@ class ProductForm(Form):
     name = fields.TextField()
     trading_unit = QuantityUnitField()
     category = ProductCategoryField()
-    best_before_days = html5_fields.IntegerField()
+    best_before_days = html5_fields.IntegerField(validators=[validators.optional()])
 
     TRADING_UNIT_RE = '(\d+\.?\d*)(\w*)'
 
