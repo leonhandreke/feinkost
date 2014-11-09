@@ -14,7 +14,7 @@
   <tr>
     <td>{{ product.category.name }}</td>
     <td>{{ product.name }}</td>
-    <td>{{ (product.quantity, product.get_unit())|render_quantity }}</td>
+    <td>{{ product|render_product_quantity }}</td>
     <td>
       {% if product.best_before_days != None %}
         {% set days = product.best_before_days %}

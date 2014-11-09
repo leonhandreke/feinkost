@@ -43,7 +43,9 @@
     <td>
       {% for item in items %}
       <div class="btn-group" style="margin: 3px;">
-        <button type="button" class="btn btn-sm btn-default" style="width: 70px;">{{ item|render_quantity }}</button>
+        <button type="button" class="btn btn-sm btn-default" style="width: 70px;">
+          {{ item|render_inventory_item_quantity }}
+        </button>
 
         {% if item.product %}
         <a href="{{ url_for('product_edit', id=item.product.id) }}"

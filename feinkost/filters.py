@@ -4,14 +4,21 @@ from datetime import datetime
 from feinkost.constants import *
 from feinkost import app
 
-@app.template_filter('render_quantity')
-def render_quantity_filter(i):
-    if i.capacity is not None:
-        quantity = i.quantity * i.capacity
+@app.template_filter('render_inventory_item_quantity')
+def render_inventoryitem_quantity(inventory_item):
+    # Check if it is a refillable container
+    if inventory_item.capacity is not None:
+        quantity = inventory_item.quantity * inventory_item.capacity
     else:
-        quantity = i.quantity * i.product.quantity
-    unit = i.get_unit()
+        quantity = inventory_item.quantity * inventory_item.product.quantity
+    return render_quantity(quantity, inventory_item.get_unit())
 
+@app.template_filter('render_product_quantity')
+def render_inventoryitem_quantity(product):
+    return render_quantity(product.quantity, product.get_unit())
+
+def render_quantity(quantity, unit):
+    """Render a human-readable, possibly converted representation of the quantity and unit."""
     if not unit:
         return str(quantity)
 
