@@ -18,7 +18,7 @@ def get_product_data_by_barcode(barcode):
     """
     url = 'http://www.codecheck.info/WebService/rest/prod/ean2/1/256/' + barcode
     headers = {
-        'Authorization': 'DigestQuick nonce="DIG6QYxUqZWvCRdl9Wttjw==",mac="QmFo3kmlqxzdUpGP+n5OshvXm1rdqFWdWLqUZvCUup4="'
+        'Authorization': 'DigestQuick nonce="kbfc2IH6wtwLZBkUlE4iUA==",mac="whHjv8BU97fipOIs0pa5qOMfpSih/sxINshh0Xr9hXg="'
     }
     prod_id = requests.get(url, headers=headers).json()['result']['id']
 
@@ -27,8 +27,8 @@ def get_product_data_by_barcode(barcode):
     r = requests.get(url, headers=headers).json()['result']
 
     name = r['name']
-    category = r['catName']
-    trading_unit = r['quant']
+    category = r.get('catName', '')
+    trading_unit = r.get('quant', '')
 
     trading_unit = (trading_unit.replace(' ', '')
                     # Remove Germany 1000-separators
@@ -39,8 +39,12 @@ def get_product_data_by_barcode(barcode):
                     .lower())
 
     match = re.match(TRADING_UNIT_RE, trading_unit)
-    quantity = Decimal(match.group(1))
-    unit = match.group(2)
+    if match:
+        quantity = Decimal(match.group(1))
+        unit = match.group(2)
+    else:
+        unit = ''
+        quantity = ''
 
     return {
         'name': name,
