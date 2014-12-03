@@ -4,6 +4,12 @@ from datetime import datetime
 from feinkost.constants import *
 from feinkost import app
 
+# https://stackoverflow.com/questions/11227620/drop-trailing-zeros-from-decimal
+def normalize_fraction(d):
+    normalized = d.normalize()
+    sign, digit, exponent = normalized.as_tuple()
+    return normalized if exponent <= 0 else normalized.quantize(1)
+
 @app.template_filter('render_inventory_item_quantity')
 def render_inventoryitem_quantity(inventory_item):
     # Check if it is a refillable container
@@ -20,11 +26,6 @@ def render_product_quantity(product):
 def render_quantity(quantity, unit):
     """Render a human-readable, possibly converted representation of the quantity and unit."""
 
-    # https://stackoverflow.com/questions/11227620/drop-trailing-zeros-from-decimal
-    def normalize_fraction(d):
-        normalized = d.normalize()
-        sign, digit, exponent = normalized.as_tuple()
-        return normalized if exponent <= 0 else normalized.quantize(1)
 
     if not unit:
         return str(normalize_fraction(quantity))

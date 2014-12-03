@@ -3,6 +3,7 @@ flask-mongoengine
 flask-bootstrap
 Flask-Mobility
 beautifulsoup4
+requests
 
 # As of 2014-02-13 these are required to work with Python3
 git+https://github.com/mitsuhiko/werkzeug.git

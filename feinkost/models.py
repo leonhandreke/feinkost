@@ -1,6 +1,10 @@
+from decimal import Decimal
+from enum import Enum
+
 import mongoengine
 
 from feinkost import app, db, constants
+from feinkost.fields import EnumField
 
 
 class ProductCategory(db.Document):
@@ -18,6 +22,14 @@ class ProductCategory(db.Document):
         while not current_category.unit and current_category.category:
             current_category = current_category.category
         return current_category.unit
+
+    def get_inventory_quantity(self):
+        quantity = Decimal(0)
+        for p in Product.objects.filter(category=self):
+            quantity += p.get_inventory_quantity()
+        for i in InventoryItem.objects.filter(category=self):
+            quantity += i.capacity * i.quantity
+        return quantity
 
 
 class Product(db.Document):
@@ -39,7 +51,15 @@ class Product(db.Document):
     def get_unit(self):
         return self.category.get_unit()
 
+    def get_inventory_quantity(self):
+        q = Decimal(0)
+        for i in  InventoryItem.objects.filter(product=self):
+            q += self.quantity * i.quantity
+        return q
+
+
 class InventoryItem(db.Document):
+
     # For direct updating of inventory items, such as refillable containers
     barcode = db.StringField()
 
@@ -49,8 +69,17 @@ class InventoryItem(db.Document):
 
     product = db.ReferenceField('Product', reverse_delete_rule=mongoengine.DENY)
     best_before = db.DateTimeField()
+
     # Stored as a fraction of the quantity of the product or the capacity of the container
-    quantity = db.DecimalField(required=True)
+    quantity = db.DecimalField()
+
+    class QuantityState(Enum):
+        empty = 0
+        almost_empty = 1
+        partially_full = 2
+        full = 3
+
+    quantity_state = EnumField(QuantityState)
 
     meta = {
         'indexes': [
