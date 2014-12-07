@@ -4,6 +4,8 @@ import readline
 
 import click
 
+from feinkost.models import ProductCategory
+
 
 TRADING_UNIT_RE = '(\d+\.?\d*)([a-zA-Z]*)'
 
@@ -32,3 +34,18 @@ def input_trading_unit(default_text=''):
     unit = match.group(2)
 
     return (quantity, unit)
+
+
+def input_category(unit, default_text=''):
+    try:
+        category_name = input_default('Category', default_text)
+    except EOFError:
+        return
+
+    try:
+        return ProductCategory.objects.get(name=category_name)
+    except ProductCategory.DoesNotExist:
+        if click.confirm("Product category %s does not exist. Create?" % category_name, default=True):
+            return ProductCategory(name=category_name, unit=unit).save()
+        else:
+            return

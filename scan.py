@@ -3,10 +3,11 @@ from decimal import Decimal, InvalidOperation
 import click
 from click.exceptions import Abort
 
-from feinkost.models import Product, InventoryItem, ProductCategory
+from feinkost.models import Product, InventoryItem
 from feinkost import constants, codecheck
 from scanner.actions import execute_action, InventoryItemAddAction, InventoryItemModifyAction
-from scanner.input import input_default, input_trading_unit
+from scanner.input import input_default, input_trading_unit, input_category
+
 
 click.echo('Welcome to Feinkost!')
 
@@ -67,21 +68,6 @@ def add_new_product(barcode):
                 category=category)
     p.save()
     return p
-
-
-def input_category(unit, default_text=''):
-    try:
-        category_name = input_default('Category', default_text)
-    except EOFError:
-        return
-
-    try:
-        return ProductCategory.objects.get(name=category_name)
-    except ProductCategory.DoesNotExist:
-        if click.confirm("Product category %s does not exist. Create?" % category_name, default=True):
-            return ProductCategory(name=category_name, unit=unit).save()
-        else:
-            return
 
 
 def add_new_refillable_container(barcode):
