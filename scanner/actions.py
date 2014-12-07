@@ -3,11 +3,22 @@ from datetime import datetime, timedelta
 import click
 
 from feinkost.models import InventoryItem
+from scanner.exceptions import InvalidOperationError
 
 
-def execute_action(action):
-    action.execute()
-    click.echo(action)
+class ActionManager():
+    previous_actions = []
+
+    def execute_action(self, action):
+        action.execute()
+        click.echo(action)
+
+    def get_previous_action(self):
+        try:
+            return self.previous_actions[-1]
+        except IndexError:
+            raise InvalidOperationError("No previous item to set the quantity of!")
+            return
 
 
 class InventoryItemActionBase():

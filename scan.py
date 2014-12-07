@@ -5,8 +5,10 @@ from click.exceptions import Abort
 
 from feinkost.models import Product, InventoryItem
 from feinkost import constants, codecheck
+
 from scanner.actions import execute_action, InventoryItemAddAction, InventoryItemModifyAction
 from scanner.input import input_default, input_trading_unit, input_category
+from scanner.exceptions import InvalidOperationError
 
 
 click.echo('Welcome to Feinkost!')
@@ -129,12 +131,22 @@ def process_barcode_inventory_item_modify(v):
     return True
 
 
-def set_previous_item_quantity(qty):
+def get_previous_action(qty):
     try:
         a = previous_actions[-1]
     except IndexError:
         click.secho("No previous item to set the quantity of!", fg='red')
         return
+
+    if not hasattr(a, 'set_quantity'):
+        click.secho("Cannot set quantity on previous action!", fg='red')
+        return
+
+    a.set_quantity(Decimal(qty))
+    click.echo(a)
+    return
+
+def set_previous_item_quantity(qty):
 
     if not hasattr(a, 'set_quantity'):
         click.secho("Cannot set quantity on previous action!", fg='red')
@@ -172,31 +184,33 @@ while True:
     except Abort:
         break
 
-    if process_commands(v):
-        continue
-
-    if process_barcode_inventory_item_modify(v):
-        continue
-
-    if add_new_refillable_container(v):
-        continue
-
-    if MODE_ADD:
-        if process_barcode_add(v):
-            continue
-
     try:
-        f = Decimal(v)
-        a = previous_actions[-1]
-        if not hasattr(a, 'set_quantity'):
-            click.echo("Cannot set quantity of previous action")
+        if process_commands(v):
             continue
-        a.set_quantity(f)
-        click.echo(a)
-        continue
-    except InvalidOperation:
-        pass
 
-    click.secho('Invalid input!', fg='red')
+        if process_barcode_inventory_item_modify(v):
+            continue
+
+        if add_new_refillable_container(v):
+            continue
+
+        if MODE_ADD:
+            if process_barcode_add(v):
+                continue
+
+        try:
+            f = Decimal(v)
+            a = previous_actions[-1]
+            if not hasattr(a, 'set_quantity'):
+                click.echo("Cannot set quantity of previous action")
+                continue
+            a.set_quantity(f)
+            click.echo(a)
+            continue
+        except InvalidOperation:
+            pass
+        raise InvalidOperationError("No command found!")
+    except InvalidOperationError as e:
+        click.secho(e, fg='red')
 
 click.echo("Bye!")
