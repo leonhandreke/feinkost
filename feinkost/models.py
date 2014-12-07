@@ -74,10 +74,19 @@ class InventoryItem(db.Document):
     quantity = db.DecimalField()
 
     class QuantityState(Enum):
-        empty = 0
-        almost_empty = 1
-        partially_full = 2
-        full = 3
+        EMPTY = 0
+        ALMOST_EMPTY = 1
+        PARTIALLY_FULL = 2
+        FULL = 3
+
+        @property
+        def display_name(self):
+            return {
+                QuantityState.EMPTY: "Empty",
+                QuantityState.ALMOST_EMPTY: "Almost Empty",
+                QuantityState.PARTIALLY_FULL: "Partially Full",
+                QuantityState.FULL: "Full"
+            }[self.value]
 
     quantity_state = EnumField(QuantityState)
 

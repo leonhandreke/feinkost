@@ -1,4 +1,5 @@
-class EnumField(object):
+from mongoengine.fields import IntField
+class EnumField(IntField):
     """
     A class to register Enum type (from the package enum34) into mongo
     :param choices: must be of :class:`enum.Enum`: type

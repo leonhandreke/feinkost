@@ -1,7 +1,10 @@
 import decimal
 from datetime import datetime
 
+from flask import render_template
+
 from feinkost.constants import *
+from feinkost import models
 from feinkost import app
 
 # https://stackoverflow.com/questions/11227620/drop-trailing-zeros-from-decimal
@@ -11,22 +14,25 @@ def normalize_fraction(d):
     return normalized if exponent <= 0 else normalized.quantize(1)
 
 @app.template_filter('render_inventory_item_quantity')
-def render_inventoryitem_quantity(inventory_item):
+def render_inventory_item_quantity(inventory_item):
     # Check if it is a refillable container
-    if inventory_item.capacity is not None:
-        quantity = inventory_item.quantity * inventory_item.capacity
-    else:
-        quantity = inventory_item.quantity * inventory_item.product.quantity
-    return render_quantity(quantity, inventory_item.get_unit())
+    capacity = inventory_item.capacity or inventory_item.product.quantity
+    quantity = capacity * inventory_item.quantity
+    quantity, unit = get_display_quantity(quantity, inventory_item.get_unit())
+    capacity, unit = get_display_quantity(capacity, inventory_item.get_unit())
+
+    return render_template('filters/render_inventoryitem_quantity.html',
+                           inventory_item=inventory_item,
+                           QuantityState=models.InventoryItem.QuantityState,
+                           capacity=capacity,
+                           quantity=quantity,
+                           unit=unit)
 
 @app.template_filter('render_product_quantity')
 def render_product_quantity(product):
-    return render_quantity(product.quantity, product.get_unit())
+    return ''.join(get_display_quantity(product.quantity, product.get_unit()))
 
-def render_quantity(quantity, unit):
-    """Render a human-readable, possibly converted representation of the quantity and unit."""
-
-
+def get_display_quantity(quantity, unit):
     if not unit:
         return str(normalize_fraction(quantity))
 
@@ -41,7 +47,7 @@ def render_quantity(quantity, unit):
     else:
         new_quantity = quantity
 
-    return str(new_quantity.quantize(decimal.Decimal('1.'), rounding=decimal.ROUND_DOWN)) + new_unit
+    return (new_quantity.quantize(decimal.Decimal('1.'), rounding=decimal.ROUND_DOWN), new_unit)
 
 @app.template_filter('timedelta_days')
 def timedelta_days_filter(d):

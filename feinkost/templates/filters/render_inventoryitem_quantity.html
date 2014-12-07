@@ -1,0 +1,33 @@
+{% if inventory_item.quantity_state %}
+
+{% if inventory_item.quantity_state == QuantityState.EMPTY %}
+{% set btn_cls = "danger" %}
+{% elif inventory_item.quantity_state == QuantityState.ALMOST_EMPTY %}
+{% set btn_cls = "warning" %}
+{% else %}
+{% set btn_cls = "default" %}
+{% endif %}
+
+<span class="btn btn-{{ btn_cls }} btn-sm">
+  {{ inventory_item.quantity_state.display_name }} (total {{ capacity }})
+</span>
+
+{% else %}
+
+{% if inventory_item.quantity <= 0.1 %}
+{% set btn_cls = "danger" %}
+{% elif inventory_item.quantity <= 0.3 %}
+{% set btn_cls = "warning" %}
+{% else %}
+{% set btn_cls = "default" %}
+{% endif %}
+
+<span class="btn btn-{{ btn_cls }} btn-sm">
+  {{ quantity }}{{ unit }}
+  {% if inventory_item.quantity < 1.0 %}
+  (of {{ capacity }}{{unit}})
+  {% endif %}
+</span>
+
+{% endif %}
+

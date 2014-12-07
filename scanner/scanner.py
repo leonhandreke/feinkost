@@ -1,111 +1,26 @@
-import re
-from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
-import readline
 
 import click
 from click.exceptions import Abort
 
 from feinkost.models import Product, InventoryItem, ProductCategory
 from feinkost import constants, codecheck
+from scanner.actions import execute_action, InventoryItemAddAction, InventoryItemModifyAction
+from scanner.input import input_default, input_trading_unit
 
 click.echo('Welcome to Feinkost!')
 
 MODE_ADD = 'MODE_ADD'
 MODE_REMOVE = 'MODE_REMOVE'
 
-TRADING_UNIT_RE = '(\d+\.?\d*)([a-zA-Z]*)'
-
 current_mode = MODE_ADD
 
 previous_actions = []
 
-class ModeSwitchAction():
-    def __init__(self, mode):
-        self.previous_mode = current_mode
-        self.mode = mode
-
-    def execute(self):
-        current_mode = self.mode
-
-    def undo(self):
-        current_mode = self.previous_mode
-
-    def __str__(self):
-        return 'Switch to ' + self.mode
-
-
-class InventoryItemAddAction():
-    def __init__(self, product):
-        self.product = product
-
-    def execute(self):
-        if self.product.best_before_days:
-            best_before = datetime.now() + timedelta(days=self.product.best_before_days)
-        else:
-            best_before = None
-        self.inventory_item = InventoryItem(
-            product=self.product,
-            best_before=best_before,
-            quantity=1.0).save()
-
-    def undo(self):
-        self.inventory_item.delete()
-
-    def set_quantity(self, times):
-        self.inventory_item.quantity = times
-        self.inventory_item.save()
-
-    def __str__(self):
-        return 'Add %s %s %s%s' % (self.inventory_item.quantity, self.product.name,
-                                   self.product.quantity, self.product.get_unit())
-
-
-class InventoryItemModifyAction():
-    def __init__(self, inventory_item):
-        self.inventory_item = inventory_item
-
-    def execute(self):
-        pass
-
-    def set_quantity(self, times):
-        self.inventory_item.quantity = times
-        self.inventory_item.save()
-
-    def __str__(self):
-        return 'Modify %s %s x %s%s' % (self.inventory_item.get_display_name(),
-                                        self.inventory_item.quantity,
-                                        self.inventory_item.capacity,
-                                        self.inventory_item.get_unit())
-
-
-def input_default(text, startup_text=''):
-    readline.set_startup_hook(lambda: readline.insert_text(startup_text))
-    r = input(text + ': ')
-    readline.set_startup_hook(None)
-    return r
-
-def input_trading_unit(default_text=''):
-    try:
-        trading_unit = input_default('Trading Unit', default_text)
-    except EOFError:
-        return
-
-    match = re.match(TRADING_UNIT_RE, trading_unit)
-
-    try:
-        quantity = Decimal(match.group(1))
-    except InvalidOperation:
-        click.echo("Invalid trading unit.")
-        return
-
-    unit = match.group(2)
-
-    return (quantity, unit)
 
 def convert_to_database_unit(quantity, unit):
     try:
-        unit, conversion = next(((k[1],v) for (k,v) in constants.UNIT_CONVERSIONS.items()
+        unit, conversion = next(((k[1], v) for (k, v) in constants.UNIT_CONVERSIONS.items()
                                  if k[0] == unit and k[1] in constants.DATABASE_UNITS))
     except StopIteration:
         click.echo("No conversion to unit valid in database found")
@@ -114,10 +29,11 @@ def convert_to_database_unit(quantity, unit):
     quantity = conversion(quantity)
     return quantity, unit
 
+
 def add_new_product(barcode):
     try:
         codecheck_info = codecheck.get_product_data_by_barcode(barcode)
-    except Exception as e:
+    except Exception:
         click.echo("Failed to get product information from codecheck.info")
         codecheck_info = {
             'name': '',
@@ -147,10 +63,11 @@ def add_new_product(barcode):
         best_before_days = None
 
     p = Product(barcode=barcode, name=name,
-            quantity=quantity, best_before_days=best_before_days,
-            category=category)
+                quantity=quantity, best_before_days=best_before_days,
+                category=category)
     p.save()
     return p
+
 
 def input_category(unit, default_text=''):
     try:
@@ -165,6 +82,7 @@ def input_category(unit, default_text=''):
             return ProductCategory(name=category_name, unit=unit).save()
         else:
             return
+
 
 def add_new_refillable_container(barcode):
     if not barcode.startswith('02'):
@@ -208,8 +126,6 @@ def process_barcode_add(v):
         return
 
     a = InventoryItemAddAction(p)
-    a.execute()
-    click.echo(a)
     previous_actions.append(a)
     return True
 
@@ -226,6 +142,7 @@ def process_barcode_inventory_item_modify(v):
     click.echo(a)
     return True
 
+
 def set_previous_item_quantity(qty):
     try:
         a = previous_actions[-1]
@@ -241,23 +158,18 @@ def set_previous_item_quantity(qty):
     click.echo(a)
     return
 
+
 def process_commands(v):
-    if v =='02000053':
+    if v == '02000053':
         set_previous_item_quantity(0.5)
         return True
 
     if v == 'MADD':
-        a = ModeSwitchAction(MODE_ADD)
-        a.execute()
-        click.echo(a)
-        previous_actions.append(a)
+        current_mode = MODE_ADD
         return True
 
     if v == 'MREM':
-        a = ModeSwitchAction(MODE_REMOVE)
-        a.execute()
-        click.echo(a)
-        previous_actions.append(a)
+        current_mode = MODE_REMOVE
         return True
 
     if v == 'UNDO':
@@ -265,6 +177,7 @@ def process_commands(v):
         a.undo()
         click.echo('Undo "%s"' % a)
         return True
+
 
 while True:
     # TODO: Read directly from the input device
