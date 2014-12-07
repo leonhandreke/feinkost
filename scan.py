@@ -6,7 +6,7 @@ from click.exceptions import Abort
 from feinkost.models import Product, InventoryItem
 from feinkost import constants, codecheck
 
-from scanner.actions import execute_action, InventoryItemAddAction, InventoryItemModifyAction
+from scanner.actions import ActionManager, InventoryItemAddAction, InventoryItemModifyAction
 from scanner.input import input_default, input_trading_unit, input_category
 from scanner.exceptions import InvalidOperationError
 
@@ -18,7 +18,7 @@ MODE_REMOVE = 'MODE_REMOVE'
 
 current_mode = MODE_ADD
 
-previous_actions = []
+action_manager = ActionManager()
 
 
 def convert_to_database_unit(quantity, unit):
@@ -93,7 +93,7 @@ def add_new_refillable_container(barcode):
     i.save()
     # Allow modification right afterwards
     a = InventoryItemModifyAction(i)
-    previous_actions.append(a)
+    action_manager.execute_action(a)
     click.echo(a)
     return i
 
@@ -112,9 +112,9 @@ def process_barcode_add(v):
 
     if not p:
         return
-
     a = InventoryItemAddAction(p)
-    previous_actions.append(a)
+    action_manager.execute_action(a)
+    click.echo(a)
     return True
 
 
@@ -124,37 +124,22 @@ def process_barcode_inventory_item_modify(v):
         i = InventoryItem.objects.get(barcode=v)
     except InventoryItem.DoesNotExist:
         return
-
     a = InventoryItemModifyAction(i)
-    previous_actions.append(a)
+    action_manager.execute_action(a)
     click.echo(a)
     return True
 
 
-def get_previous_action(qty):
-    try:
-        a = previous_actions[-1]
-    except IndexError:
-        click.secho("No previous item to set the quantity of!", fg='red')
-        return
-
-    if not hasattr(a, 'set_quantity'):
-        click.secho("Cannot set quantity on previous action!", fg='red')
-        return
-
-    a.set_quantity(Decimal(qty))
-    click.echo(a)
-    return
-
 def set_previous_item_quantity(qty):
-
-    if not hasattr(a, 'set_quantity'):
-        click.secho("Cannot set quantity on previous action!", fg='red')
-        return
-
-    a.set_quantity(Decimal(qty))
+    a = action_manager.get_previous_action()
+    a.set_quantity(qty)
     click.echo(a)
-    return
+
+
+def set_previous_item_quantity_state(quantity_state):
+    a = action_manager.get_previous_action()
+    a.set_quantity_state(quantity_state)
+    click.echo(a)
 
 
 def process_commands(v):
@@ -171,9 +156,7 @@ def process_commands(v):
         return True
 
     if v == 'UNDO':
-        a = previous_actions.pop()
-        a.undo()
-        click.echo('Undo "%s"' % a)
+        action_manager.undo_previous_action()
         return True
 
 
@@ -199,17 +182,13 @@ while True:
                 continue
 
         try:
-            f = Decimal(v)
-            a = previous_actions[-1]
-            if not hasattr(a, 'set_quantity'):
-                click.echo("Cannot set quantity of previous action")
-                continue
-            a.set_quantity(f)
-            click.echo(a)
+            set_previous_item_quantity(Decimal(v))
             continue
         except InvalidOperation:
             pass
+
         raise InvalidOperationError("No command found!")
+
     except InvalidOperationError as e:
         click.secho(e, fg='red')
 

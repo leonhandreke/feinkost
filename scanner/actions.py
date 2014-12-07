@@ -10,18 +10,32 @@ class ActionManager():
     previous_actions = []
 
     def execute_action(self, action):
+        self.previous_actions.append(action)
         action.execute()
-        click.echo(action)
 
     def get_previous_action(self):
         try:
             return self.previous_actions[-1]
         except IndexError:
             raise InvalidOperationError("No previous item to set the quantity of!")
-            return
+
+    def undo_previous_action(self):
+        if not self.previous_actions:
+            raise InvalidOperationError("No previous action to undo.")
+        a = self.previous_actions.pop()
+        a.undo()
+        return a
 
 
-class InventoryItemActionBase():
+class ActionBase():
+    def set_quantity(self):
+        raise InvalidOperationError("Set quantity not possible on " + self.__class__)
+
+    def set_quantity_state(self):
+        raise InvalidOperationError("Set quantity not possible on " + self.__class__)
+
+
+class InventoryItemActionBase(ActionBase):
     def set_quantity(self, times):
         self.inventory_item.quantity = times
         self.inventory_item.save()
