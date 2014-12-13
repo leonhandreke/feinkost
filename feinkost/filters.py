@@ -46,7 +46,7 @@ def render_product_quantity(product):
 
 def get_display_quantity(quantity, unit):
     if not unit:
-        return str(normalize_fraction(quantity))
+        return normalize_fraction(quantity), ''
 
     new_unit = unit
     if unit == UNIT_LITER and quantity < 1:
