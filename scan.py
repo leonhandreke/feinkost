@@ -8,7 +8,7 @@ from feinkost import constants, codecheck
 
 from scanner.actions import ActionManager, InventoryItemAddAction, InventoryItemModifyAction
 from scanner.input import input_default, input_trading_unit, input_category
-from scanner.exceptions import InvalidOperationError
+from scanner.exceptions import InvalidOperationError, NotApplicableToInputException
 
 
 click.echo('Welcome to Feinkost!')
@@ -74,7 +74,7 @@ def add_new_product(barcode):
 
 def add_new_refillable_container(barcode):
     if not barcode.startswith('02'):
-        return False
+        raise NotApplicableToInputException()
 
     click.echo("Add new refillable container.")
     capacity, unit = input_trading_unit()
@@ -100,7 +100,7 @@ def add_new_refillable_container(barcode):
 
 def process_barcode_add(v):
     if len(v) < 8:
-        return
+        raise NotApplicableToInputException()
 
     try:
         p = Product.objects.get(barcode=v)
@@ -123,16 +123,36 @@ def process_barcode_inventory_item_modify(v):
     try:
         i = InventoryItem.objects.get(barcode=v)
     except InventoryItem.DoesNotExist:
-        return
+        raise NotApplicableToInputException()
     a = InventoryItemModifyAction(i)
     action_manager.execute_action(a)
     click.echo(a)
     return True
 
 
-def set_previous_item_quantity(qty):
+def process_set_quantity(v):
+    if len(v) > 2:
+        raise NotApplicableToInputException()
+
+    try:
+        quantity = Decimal(v)
+    except InvalidOperation:
+        raise NotApplicableToInputException()
+    set_previous_item_quantity(quantity)
+
+
+def process_set_quantity_commands(v):
+    if v == '02000053bronte':
+        set_previous_item_quantity(0.5)
+    elif v == '02000053':
+        set_previous_item_quantity_state(InventoryItem.QuantityState.PARTIALLY_FULL)
+    else:
+        raise NotApplicableToInputException()
+
+
+def set_previous_item_quantity(quantity):
     a = action_manager.get_previous_action()
-    a.set_quantity(qty)
+    a.set_quantity(quantity)
     click.echo(a)
 
 
@@ -143,9 +163,6 @@ def set_previous_item_quantity_state(quantity_state):
 
 
 def process_commands(v):
-    if v == '02000053':
-        set_previous_item_quantity(0.5)
-        return True
 
     if v == 'MADD':
         current_mode = MODE_ADD
@@ -159,6 +176,17 @@ def process_commands(v):
         action_manager.undo_previous_action()
         return True
 
+    raise NotApplicableToInputException()
+
+
+COMMAND_CHAIN = [
+    process_commands,
+    process_set_quantity_commands,
+    process_barcode_inventory_item_modify,
+    add_new_refillable_container,
+    process_barcode_add,
+    process_set_quantity,
+]
 
 while True:
     # TODO: Read directly from the input device
@@ -168,28 +196,16 @@ while True:
         break
 
     try:
-        if process_commands(v):
-            continue
-
-        if process_barcode_inventory_item_modify(v):
-            continue
-
-        if add_new_refillable_container(v):
-            continue
-
-        if MODE_ADD:
-            if process_barcode_add(v):
-                continue
-
-        try:
-            set_previous_item_quantity(Decimal(v))
-            continue
-        except InvalidOperation:
-            pass
-
-        raise InvalidOperationError("No command found!")
+        for command in COMMAND_CHAIN:
+            try:
+                command(v)
+                break
+            except NotApplicableToInputException:
+                pass
+        else:
+            raise InvalidOperationError("No command found!")
 
     except InvalidOperationError as e:
-        click.secho(e, fg='red')
+        click.secho(str(e), fg='red')
 
 click.echo("Bye!")

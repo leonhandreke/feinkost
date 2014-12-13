@@ -23,9 +23,9 @@
 {% endif %}
 
 <span class="btn btn-{{ btn_cls }} btn-sm">
-  {{ quantity }}{{ unit }}
+  {{ quantity }}{{ quantity_unit }}
   {% if inventory_item.quantity < 1.0 %}
-  (of {{ capacity }}{{unit}})
+  (of {{ capacity }}{{capacity_unit}})
   {% endif %}
 </span>
 

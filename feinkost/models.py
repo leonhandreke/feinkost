@@ -82,18 +82,18 @@ class InventoryItem(db.Document):
         @property
         def display_name(self):
             return {
-                QuantityState.EMPTY: "Empty",
-                QuantityState.ALMOST_EMPTY: "Almost Empty",
-                QuantityState.PARTIALLY_FULL: "Partially Full",
-                QuantityState.FULL: "Full"
-            }[self.value]
+                self.__class__.EMPTY: "Empty",
+                self.__class__.ALMOST_EMPTY: "Almost Empty",
+                self.__class__.PARTIALLY_FULL: "Partially Full",
+                self.__class__.FULL: "Full"
+            }[self]
 
     quantity_state = EnumField(QuantityState)
 
     meta = {
         'indexes': [
             # Ensure barcodes may be empty, but if set, be unique
-            { 'fields': ['barcode'], 'sparse': True, 'unique': True }
+            {'fields': ['barcode'], 'sparse': True, 'unique': True}
         ]
     }
 

@@ -1,7 +1,5 @@
 from datetime import datetime, timedelta
 
-import click
-
 from feinkost.models import InventoryItem
 from scanner.exceptions import InvalidOperationError
 
@@ -37,11 +35,14 @@ class ActionBase():
 
 class InventoryItemActionBase(ActionBase):
     def set_quantity(self, times):
+        self.inventory_item.quantity_state = None
         self.inventory_item.quantity = times
         self.inventory_item.save()
 
     def set_quantity_state(self, quantity_state):
+        self.inventory_item.quantity = None
         self.inventory_item.quantity_state = quantity_state
+        self.inventory_item.save()
 
 
 class InventoryItemAddAction(InventoryItemActionBase):
@@ -62,7 +63,9 @@ class InventoryItemAddAction(InventoryItemActionBase):
         self.inventory_item.delete()
 
     def __str__(self):
-        return 'Add %s %s %s%s' % (self.inventory_item.quantity, self.product.name,
+        quantity = (self.inventory_item.quantity or
+                    self.inventory_item.quantity_state.display_name)
+        return 'Add %s %s %s%s' % (quantity, self.product.name,
                                    self.product.quantity, self.product.get_unit())
 
 
